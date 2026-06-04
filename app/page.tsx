@@ -96,6 +96,7 @@ type DashboardMedication = {
   dosage?: string;
   schedule?: string;
   startDate?: string;
+  endDate?: string;
   active: boolean;
   notes?: string;
 };
@@ -107,6 +108,7 @@ type StoredMedication = {
   dosage?: string;
   schedule?: string;
   startDate?: Date;
+  endDate?: Date;
   active: boolean;
   notes?: string;
 };
@@ -296,6 +298,7 @@ async function getMedications(
       dosage: medication.dosage,
       schedule: medication.schedule,
       startDate: medication.startDate?.toISOString(),
+      endDate: medication.endDate?.toISOString(),
       active: medication.active,
       notes: medication.notes,
     }));
@@ -441,7 +444,20 @@ function buildUrgencyItems(
     }));
 
   const medicationItems = medications
-    .filter((medication) => medication.active)
+    .filter((medication) => medication.active && medication.endDate)
+    .filter((medication) => isWithinDays(medication.endDate as string, 7))
+    .map((medication) => ({
+      date: medication.endDate as string,
+      title: "Fine terapia",
+      detail: `${medication.memberName} · ${medication.name} · ${formatDate(
+        medication.endDate
+      )}`,
+      tone: "border-[#f0d3a6] bg-[#fff8e9]",
+      href: `/medications#medication-${medication.id}`,
+    }));
+
+  const activeMedicationItems = medications
+    .filter((medication) => medication.active && !medication.endDate)
     .slice(0, 3)
     .map((medication) => ({
       date: new Date().toISOString(),
@@ -453,7 +469,12 @@ function buildUrgencyItems(
       href: `/medications#medication-${medication.id}`,
     }));
 
-  return [...visitItems, ...recipeItems, ...medicationItems]
+  return [
+    ...visitItems,
+    ...recipeItems,
+    ...medicationItems,
+    ...activeMedicationItems,
+  ]
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
     .slice(0, 6);
 }
@@ -546,6 +567,8 @@ function buildSearchItems(
       medication.name,
       medication.dosage,
       medication.schedule,
+      medication.startDate,
+      medication.endDate,
       medication.notes,
     ]
       .filter(Boolean)

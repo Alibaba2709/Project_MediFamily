@@ -8,6 +8,7 @@ const MedicationSchema = new Schema(
     dosage: { type: String },
     schedule: { type: String },
     startDate: { type: Date },
+    endDate: { type: Date },
     active: { type: Boolean, default: true },
     notes: { type: String },
   },

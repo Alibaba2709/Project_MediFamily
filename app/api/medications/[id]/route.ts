@@ -51,6 +51,7 @@ export async function PATCH(request: Request, context: RouteContext) {
       dosage: body.dosage ? String(body.dosage).trim() : undefined,
       schedule: body.schedule ? String(body.schedule).trim() : undefined,
       startDate: body.startDate || undefined,
+      endDate: body.endDate || undefined,
       active: body.active ?? true,
       notes: body.notes ? String(body.notes).trim() : undefined,
     },

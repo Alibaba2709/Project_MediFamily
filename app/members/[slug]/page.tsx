@@ -96,9 +96,14 @@ export default async function MemberPage(context: RouteContext) {
       date: medication.startDate ?? medication.createdAt,
       type: "Farmaco",
       title: String(medication.name),
-      detail: medication.schedule
-        ? `Orari: ${medication.schedule}`
-        : "Orari non impostati",
+      detail: [
+        medication.schedule
+          ? `Orari: ${medication.schedule}`
+          : "Orari non impostati",
+        medication.endDate ? `Fine: ${formatDate(medication.endDate)}` : "",
+      ]
+        .filter(Boolean)
+        .join(" · "),
       note: medication.notes,
     })),
     ...documents.map((document) => ({
@@ -205,6 +210,9 @@ export default async function MemberPage(context: RouteContext) {
                   <p className="text-sm font-semibold text-[#4f5c55]">
                     {medication.name} ·{" "}
                     {medication.dosage || "dosaggio non impostato"}
+                  </p>
+                  <p className="mt-1 text-xs text-[#7a6f68]">
+                    Fine terapia: {formatDate(medication.endDate)}
                   </p>
                   {medication.notes ? (
                     <ItemNote>{medication.notes}</ItemNote>

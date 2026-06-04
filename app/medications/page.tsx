@@ -19,6 +19,7 @@ type StoredMedication = {
   dosage?: string;
   schedule?: string;
   startDate?: Date;
+  endDate?: Date;
   active: boolean;
   notes?: string;
 };
@@ -38,6 +39,7 @@ async function getMedications(familyId: string) {
       dosage: medication.dosage,
       schedule: medication.schedule,
       startDate: medication.startDate?.toISOString(),
+      endDate: medication.endDate?.toISOString(),
       active: medication.active,
       notes: medication.notes,
     }));
@@ -197,6 +199,9 @@ export default async function MedicationsPage() {
                       </p>
                       <p className="mt-1 text-sm text-[#6c5f57]">
                         Inizio terapia: {formatDate(medication.startDate)}
+                      </p>
+                      <p className="mt-1 text-sm text-[#6c5f57]">
+                        Fine terapia: {formatDate(medication.endDate)}
                       </p>
                       {medication.notes ? (
                         <p className="mt-2 text-sm leading-6 text-[#6c5f57]">

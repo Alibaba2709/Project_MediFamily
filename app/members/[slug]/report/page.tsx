@@ -127,7 +127,9 @@ export default async function MemberReportPage(context: RouteContext) {
           {medications.length ? (
             medications.map((medication) => (
               <ReportItem
-                detail={`${medication.dosage || "dosaggio non impostato"} · ${medication.schedule || "orari non impostati"}`}
+                detail={`${medication.dosage || "dosaggio non impostato"} · ${
+                  medication.schedule || "orari non impostati"
+                } · Fine terapia: ${formatDate(medication.endDate)}`}
                 key={String(medication._id)}
                 note={medication.notes}
                 title={String(medication.name)}

@@ -39,6 +39,7 @@ type StoredMedication = {
   name: string;
   dosage?: string;
   schedule?: string;
+  endDate?: Date;
   active: boolean;
 };
 
@@ -184,17 +185,26 @@ async function getReminders(
       };
     });
 
-  const medicationReminders = medications.map((medication) => ({
-    date: new Date().toISOString(),
-    detail: `${displayFamilyMemberName(medication.memberName, members)} · ${medication.name}${
-      medication.dosage ? ` · ${medication.dosage}` : ""
-    }${medication.schedule ? ` · ${medication.schedule}` : ""}`,
-    href: `/medications#medication-${medication._id.toString()}`,
-    memberName: displayFamilyMemberName(medication.memberName, members),
-    title: "Farmaco attivo",
-    tone: "border-[#d5e0d8] bg-[#f6fbf7] text-[#315a45]",
-    type: "medication" as const,
-  }));
+  const medicationReminders = medications.map((medication) => {
+    const memberName = displayFamilyMemberName(medication.memberName, members);
+    const endDate = medication.endDate?.toISOString();
+
+    return {
+      date: endDate ?? new Date().toISOString(),
+      detail: `${memberName} · ${medication.name}${
+        medication.dosage ? ` · ${medication.dosage}` : ""
+      }${medication.schedule ? ` · ${medication.schedule}` : ""}${
+        endDate ? ` · fine ${formatDate(endDate)}` : ""
+      }`,
+      href: `/medications#medication-${medication._id.toString()}`,
+      memberName,
+      title: endDate ? "Fine terapia" : "Farmaco attivo",
+      tone: endDate
+        ? "border-[#f0d3a6] bg-[#fff8e9] text-[#7a5b2f]"
+        : "border-[#d5e0d8] bg-[#f6fbf7] text-[#315a45]",
+      type: "medication" as const,
+    };
+  });
 
   const today = startOfDay(new Date());
 

@@ -12,6 +12,7 @@ const initialForm = {
   dosage: "",
   schedule: "",
   startDate: "",
+  endDate: "",
   active: "true",
   notes: "",
 };
@@ -23,6 +24,7 @@ type EditableMedication = {
   dosage?: string;
   schedule?: string;
   startDate?: string;
+  endDate?: string;
   active: boolean;
   notes?: string;
 };
@@ -56,6 +58,7 @@ function buildInitialForm(
     dosage: medication.dosage ?? "",
     schedule: medication.schedule ?? "",
     startDate: toDateInput(medication.startDate),
+    endDate: toDateInput(medication.endDate),
     active: medication.active ? "true" : "false",
     notes: medication.notes ?? "",
   };
@@ -101,6 +104,7 @@ export function MedicationForm({
         body: JSON.stringify({
           ...form,
           startDate: form.startDate || undefined,
+          endDate: form.endDate || undefined,
           active: form.active === "true",
         }),
       }
@@ -257,6 +261,23 @@ export function MedicationForm({
                       setForm((current) => ({
                         ...current,
                         startDate: event.target.value,
+                      }))
+                    }
+                  />
+                </label>
+
+                <label className="space-y-2">
+                  <span className="text-sm font-semibold text-[#4f5c55]">
+                    Fine terapia
+                  </span>
+                  <input
+                    className="h-11 w-full rounded-md border border-[#ded4cb] bg-white px-3 text-sm outline-none focus:border-[#789888] focus:ring-2 focus:ring-[#d9eadf]"
+                    type="date"
+                    value={form.endDate}
+                    onChange={(event) =>
+                      setForm((current) => ({
+                        ...current,
+                        endDate: event.target.value,
                       }))
                     }
                   />

@@ -184,7 +184,12 @@ export async function GET(_request: Request, context: RouteContext) {
     "FARMACI",
     ...(medications.length
       ? medications.flatMap((medication) => [
-          `${medication.name} - ${medication.dosage || "dosaggio non impostato"} - ${medication.schedule || "orari non impostati"}`,
+          [
+            medication.name,
+            medication.dosage || "dosaggio non impostato",
+            medication.schedule || "orari non impostati",
+            `fine terapia: ${formatDate(medication.endDate)}`,
+          ].join(" - "),
           medication.notes ? `Note: ${medication.notes}` : "",
         ])
       : ["Nessun dato registrato."]),
