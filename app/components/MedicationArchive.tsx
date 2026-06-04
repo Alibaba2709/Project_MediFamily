@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
 import { Pill } from "lucide-react";
 import {
   frequencyLabels,
@@ -43,6 +44,7 @@ type MedicationArchiveProps = {
   canEdit: boolean;
   groups: MedicationGroup[];
   memberNames: string[];
+  selectedMember: string;
   todayMedicationIds: string[];
 };
 
@@ -100,6 +102,7 @@ export function MedicationArchive({
   canEdit,
   groups,
   memberNames,
+  selectedMember,
   todayMedicationIds,
 }: MedicationArchiveProps) {
   const [filter, setFilter] = useState<FilterKey>("all");
@@ -141,6 +144,43 @@ export function MedicationArchive({
         <p className="text-sm font-semibold uppercase text-[#947b6a]">
           Filtri rapidi
         </p>
+        <div className="mt-3 space-y-2">
+          <p className="text-xs font-semibold uppercase text-[#947b6a]">
+            Familiare
+          </p>
+          <div className="flex gap-2 overflow-x-auto pb-1">
+            <Link
+              className={
+                selectedMember === "all"
+                  ? "whitespace-nowrap rounded-md bg-[#315a45] px-3 py-2 text-sm font-semibold text-white"
+                  : "whitespace-nowrap rounded-md border border-[#ded4cb] bg-[#fffdfb] px-3 py-2 text-sm font-semibold text-[#4f5c55]"
+              }
+              href="/medications"
+            >
+              Tutti
+            </Link>
+            {memberNames.map((memberName) => (
+              <Link
+                className={
+                  selectedMember === memberName
+                    ? "whitespace-nowrap rounded-md bg-[#315a45] px-3 py-2 text-sm font-semibold text-white"
+                    : "whitespace-nowrap rounded-md border border-[#ded4cb] bg-[#fffdfb] px-3 py-2 text-sm font-semibold text-[#4f5c55]"
+                }
+                href={{
+                  pathname: "/medications",
+                  query: { member: memberName },
+                }}
+                key={memberName}
+              >
+                {memberName}
+              </Link>
+            ))}
+          </div>
+        </div>
+        <div className="mt-4 space-y-2">
+          <p className="text-xs font-semibold uppercase text-[#947b6a]">
+            Stato terapia
+          </p>
         <div className="mt-3 grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
           {(Object.keys(filterLabels) as FilterKey[]).map((key) => (
             <button
@@ -156,6 +196,7 @@ export function MedicationArchive({
               {filterLabels[key]} · {counts[key]}
             </button>
           ))}
+        </div>
         </div>
       </div>
 

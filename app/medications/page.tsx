@@ -359,40 +359,6 @@ export default async function MedicationsPage({
           </div>
         </section>
 
-        <section className="rounded-lg border border-[#eadfd7] bg-white p-4 shadow-sm">
-          <p className="text-sm font-semibold uppercase text-[#947b6a]">
-            Visualizza terapie
-          </p>
-          <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
-            <Link
-              className={
-                selectedMember === "all"
-                  ? "whitespace-nowrap rounded-md bg-[#315a45] px-3 py-2 text-sm font-semibold text-white"
-                  : "whitespace-nowrap rounded-md border border-[#ded4cb] bg-[#fffdfb] px-3 py-2 text-sm font-semibold text-[#4f5c55]"
-              }
-              href="/medications"
-            >
-              Tutti
-            </Link>
-            {memberNames.map((memberName) => (
-              <Link
-                className={
-                  selectedMember === memberName
-                    ? "whitespace-nowrap rounded-md bg-[#315a45] px-3 py-2 text-sm font-semibold text-white"
-                    : "whitespace-nowrap rounded-md border border-[#ded4cb] bg-[#fffdfb] px-3 py-2 text-sm font-semibold text-[#4f5c55]"
-                }
-                href={{
-                  pathname: "/medications",
-                  query: { member: memberName },
-                }}
-                key={memberName}
-              >
-                {memberName}
-              </Link>
-            ))}
-          </div>
-        </section>
-
         <section className="rounded-lg border border-[#eadfd7] bg-white p-5 shadow-sm">
           <div className="mb-4 flex items-center justify-between gap-3">
             <div className="flex items-center gap-3">
@@ -540,6 +506,7 @@ export default async function MedicationsPage({
             canEdit={canEdit}
             groups={filteredMedicationGroups}
             memberNames={memberNames}
+            selectedMember={selectedMember}
             todayMedicationIds={Array.from(
               new Set(
                 filteredTodayTherapies.map((therapy) => therapy.medicationId)
