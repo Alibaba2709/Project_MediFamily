@@ -170,7 +170,7 @@ async function getReminders(familyId: string): Promise<ReminderViewItem[]> {
     detail: `${medication.memberName} · ${medication.name}${
       medication.dosage ? ` · ${medication.dosage}` : ""
     }${medication.schedule ? ` · ${medication.schedule}` : ""}`,
-    href: "/medications",
+    href: `/medications#medication-${medication._id.toString()}`,
     memberName: medication.memberName,
     title: "Farmaco attivo",
     tone: "border-[#d5e0d8] bg-[#f6fbf7] text-[#315a45]",

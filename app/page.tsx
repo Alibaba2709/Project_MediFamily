@@ -448,7 +448,7 @@ function buildUrgencyItems(
         medication.schedule ? ` · ${medication.schedule}` : ""
       }`,
       tone: "border-[#d5e0d8] bg-[#f6fbf7]",
-      href: "/medications",
+      href: `/medications#medication-${medication.id}`,
     }));
 
   return [...visitItems, ...recipeItems, ...medicationItems]
@@ -519,7 +519,7 @@ function buildSearchItems(
       medication.schedule || "Orari non impostati"
     }`,
     memberName: medication.memberName,
-    href: "/medications",
+    href: `/medications#medication-${medication.id}`,
     searchText: [
       medication.memberName,
       medication.name,

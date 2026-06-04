@@ -139,7 +139,8 @@ export default async function MedicationsPage() {
                 <div className="grid gap-3">
                   {group.medications.map((medication) => (
                     <article
-                      className="rounded-lg border border-[#eadfd7] bg-white p-4"
+                      className="medication-card scroll-mt-24 rounded-lg border border-[#eadfd7] bg-white p-4 transition"
+                      id={`medication-${medication.id}`}
                       key={medication.id}
                     >
                       <div className="flex flex-wrap items-center gap-2">

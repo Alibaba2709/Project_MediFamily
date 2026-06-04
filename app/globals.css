@@ -19,3 +19,8 @@ body {
   color: var(--foreground);
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
 }
+
+.medication-card:target {
+  border-color: #82c79b;
+  box-shadow: 0 0 0 3px rgba(130, 199, 155, 0.22);
+}
