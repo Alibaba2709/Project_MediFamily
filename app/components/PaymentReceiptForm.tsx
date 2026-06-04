@@ -111,7 +111,7 @@ export function PaymentReceiptForm({ visits }: PaymentReceiptFormProps) {
   return (
     <>
       <button
-        className="flex h-10 items-center gap-2 rounded-md bg-[#315a45] px-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#274737] disabled:cursor-not-allowed disabled:opacity-60"
+        className="flex h-10 w-full items-center justify-center gap-2 rounded-md bg-[#315a45] px-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#274737] disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
         disabled={visits.length === 0}
         onClick={openForm}
         type="button"
@@ -150,7 +150,7 @@ export function PaymentReceiptForm({ visits }: PaymentReceiptFormProps) {
             <form className="space-y-5 p-5" onSubmit={handleSubmit}>
               <label className="block space-y-2">
                 <span className="text-sm font-semibold text-[#4f5c55]">
-                  Visita prenotata
+                  Visita collegata
                 </span>
                 <select
                   className="h-11 w-full rounded-md border border-[#ded4cb] bg-white px-3 text-sm outline-none focus:border-[#789888] focus:ring-2 focus:ring-[#d9eadf]"

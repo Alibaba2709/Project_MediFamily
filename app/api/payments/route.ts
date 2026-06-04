@@ -43,7 +43,10 @@ export async function POST(request: Request) {
   const visit = await Visit.findOne({
     _id: visitId,
     familyId: user.familyId,
-    status: { $in: ["booked", "paid", "completed"] },
+    $or: [
+      { status: { $in: ["booked", "paid", "completed"] } },
+      { status: { $exists: false } },
+    ],
   });
 
   if (!visit) {
@@ -68,7 +71,7 @@ export async function POST(request: Request) {
     notes: body.notes ? String(body.notes).trim() : undefined,
   });
 
-  if (visit.status === "booked") {
+  if (!visit.status || visit.status === "booked") {
     visit.status = "paid";
     await visit.save();
   }

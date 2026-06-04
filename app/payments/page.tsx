@@ -37,7 +37,10 @@ async function getPaymentData(familyId: string) {
     const [visits, receipts] = await Promise.all([
       Visit.find({
         familyId,
-        status: { $in: ["booked", "paid", "completed"] },
+        $or: [
+          { status: { $in: ["booked", "paid", "completed"] } },
+          { status: { $exists: false } },
+        ],
       })
         .sort({ visitDate: 1, visitTime: 1 })
         .lean<StoredVisit[]>(),
