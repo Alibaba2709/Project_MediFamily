@@ -1,7 +1,8 @@
 import Link from "next/link";
-import { ArrowLeft, Settings, Users } from "lucide-react";
+import { ArrowLeft, Settings } from "lucide-react";
 import { requireVerifiedUser } from "@/app/lib/auth";
 import { getFamilyMembers } from "@/app/lib/family";
+import { FamilyMembersManager } from "@/app/components/FamilyMembersManager";
 
 export default async function SettingsPage() {
   const user = await requireVerifiedUser();
@@ -60,34 +61,10 @@ export default async function SettingsPage() {
           </article>
 
           <article className="rounded-lg border border-[#eadfd7] bg-white p-5 shadow-sm">
-            <div className="flex items-center gap-2">
-              <Users size={18} className="text-[#789888]" aria-hidden="true" />
-              <h2 className="text-sm font-semibold uppercase text-[#7a6f68]">
-                Membri famiglia
-              </h2>
-            </div>
-            <div className="mt-4 space-y-2">
-              {members.map((member) => (
-                <div
-                  className="flex items-center gap-3 rounded-md bg-[#fffaf6] p-2"
-                  key={member.name}
-                >
-                  <span
-                    className={`flex size-9 items-center justify-center rounded-lg ${member.tone} text-sm font-semibold text-[#313a35]`}
-                  >
-                    {member.name.slice(0, 1)}
-                  </span>
-                  <span>
-                    <span className="block text-sm font-semibold text-[#29302d]">
-                      {member.name}
-                    </span>
-                    <span className="block text-xs text-[#7a6f68]">
-                      {member.role}
-                    </span>
-                  </span>
-                </div>
-              ))}
-            </div>
+            <FamilyMembersManager
+              currentUserName={user.name}
+              members={members}
+            />
           </article>
         </section>
       </div>

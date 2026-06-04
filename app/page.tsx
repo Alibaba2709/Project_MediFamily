@@ -23,6 +23,7 @@ import { Recipe } from "@/app/models/Recipe";
 import { VisitForm } from "@/app/components/VisitForm";
 import { DeleteButton } from "@/app/components/DeleteButton";
 import { LogoutButton } from "@/app/components/LogoutButton";
+import { AddFamilyMemberForm } from "@/app/components/AddFamilyMemberForm";
 import { getFamilyMembers, memberSlug } from "@/app/lib/family";
 
 type DashboardVisit = {
@@ -260,20 +261,20 @@ export default async function Home() {
 
   return (
     <main className="min-h-screen bg-[#fffaf6] text-[#2f3330]">
-      <header className="border-b border-[#eadfd7] bg-[#fffdfb]/90">
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-5 py-3 sm:px-8">
-          <Link href="/" className="flex min-w-0 items-center gap-3">
+      <header className="border-b border-[#eadfd7] bg-[#fffdfb]/95">
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-2 px-4 py-2.5 sm:gap-3 sm:px-8 sm:py-3">
+          <Link href="/" className="flex min-w-0 items-center gap-2 sm:gap-3">
             <Image
               src="/medifamily-logo-symbol.png"
               alt="MediFamily"
               width={760}
               height={650}
               priority
-              className="h-14 w-auto shrink-0 object-contain sm:h-16"
+              className="h-11 w-auto shrink-0 object-contain sm:h-16"
             />
             <span className="min-w-0">
               <span
-                className="block text-xl font-bold leading-tight text-[#5573ad] sm:text-2xl"
+                className="block text-lg font-bold leading-tight text-[#5573ad] sm:text-2xl"
                 style={{
                   fontFamily:
                     '"Arial Rounded MT Bold", "Avenir Next Rounded", var(--font-geist-sans), sans-serif',
@@ -291,7 +292,7 @@ export default async function Home() {
                 </span>
                 <span className="text-[#82c79b]">Family</span>
               </span>
-              <span className="block text-[10px] font-semibold uppercase tracking-[0.18em] sm:text-xs">
+              <span className="hidden text-[10px] font-semibold uppercase tracking-[0.18em] min-[390px]:block sm:text-xs">
                 <span className="text-[#82c79b]">La salute</span>{" "}
                 <span className="text-[#8fa4d8]">di chi ami,</span>{" "}
                 <span className="text-[#ef8580]">organizzata.</span>
@@ -312,12 +313,12 @@ export default async function Home() {
         </div>
       </header>
 
-      <div className="mx-auto grid max-w-7xl gap-6 px-5 py-6 sm:px-8 lg:grid-cols-[260px_1fr]">
-        <aside className="space-y-4">
-          <details className="group rounded-lg border border-[#eadfd7] bg-white p-4 shadow-sm">
+      <div className="mx-auto grid max-w-7xl gap-4 px-4 py-4 sm:gap-6 sm:px-8 sm:py-6 lg:grid-cols-[260px_1fr]">
+        <aside className="space-y-3 sm:space-y-4">
+          <details className="group rounded-lg border border-[#eadfd7] bg-white p-3 shadow-sm sm:p-4">
             <summary className="flex cursor-pointer list-none items-center justify-between gap-3 [&::-webkit-details-marker]:hidden">
               <span className="flex min-w-0 items-center gap-3">
-                <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-[#f9d8d6] text-sm font-semibold text-[#313a35]">
+                <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-[#f9d8d6] text-sm font-semibold text-[#313a35] sm:size-10">
                   {user.name.slice(0, 1)}
                 </span>
                 <span className="min-w-0">
@@ -363,9 +364,14 @@ export default async function Home() {
                     </div>
                   </Link>
                 ))}
+                <AddFamilyMemberForm
+                  compact
+                  currentCount={members.length}
+                  limit={6}
+                />
               </div>
 
-              <div className="mt-4 border-t border-[#eee5dd] pt-3">
+              <div className="mt-3 border-t border-[#eee5dd] pt-3 sm:mt-4">
                 <p className="mb-2 text-xs font-semibold uppercase text-[#7a6f68]">
                   Impostazioni
                 </p>
@@ -383,7 +389,7 @@ export default async function Home() {
             </div>
           </details>
 
-          <section className="rounded-lg border border-[#d8e5dd] bg-[#f6fbf7] p-4 shadow-sm">
+          <section className="hidden rounded-lg border border-[#d8e5dd] bg-[#f6fbf7] p-4 shadow-sm sm:block">
             <div className="flex items-start gap-3">
               <ShieldCheck
                 size={22}
@@ -402,41 +408,41 @@ export default async function Home() {
           </section>
         </aside>
 
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6">
           <section className="grid gap-4 md:grid-cols-[1.4fr_1fr]">
-            <div className="rounded-lg border border-[#eadfd7] bg-white p-5 shadow-sm">
-              <div className="mb-5 flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
+            <div className="rounded-lg border border-[#eadfd7] bg-white p-4 shadow-sm sm:p-5">
+              <div className="mb-4 flex items-start justify-between gap-3 sm:mb-5">
                 <div>
-                  <p className="text-sm font-medium text-[#947b6a]">
+                  <p className="text-xs font-semibold uppercase text-[#947b6a] sm:text-sm sm:normal-case">
                     Dati aggiornati
                   </p>
-                  <h2 className="mt-1 text-3xl font-semibold text-[#29302d]">
+                  <h2 className="mt-1 text-2xl font-semibold text-[#29302d] sm:text-3xl">
                     Agenda e scadenze
                   </h2>
                 </div>
-                <div className="rounded-lg border border-[#f1d8cf] bg-[#fff7f5] px-3 py-2 text-sm text-[#7f5146]">
+                <div className="rounded-md border border-[#f1d8cf] bg-[#fff7f5] px-2 py-1 text-xs font-semibold text-[#7f5146] sm:px-3 sm:py-2 sm:text-sm sm:font-normal">
                   Dati reali
                 </div>
               </div>
 
-              <div className="grid gap-3 sm:grid-cols-3">
+              <div className="grid grid-cols-3 gap-2 sm:gap-3">
                 {summaryCards.map((card) => {
                   const Icon = card.icon;
 
                   return (
                     <article
-                      className={`rounded-lg border p-4 ${card.tone}`}
+                      className={`rounded-lg border p-3 sm:p-4 ${card.tone}`}
                       key={card.title}
                     >
                       <Icon
-                        size={20}
-                        className="mb-3 text-[#4f5c55]"
+                        size={18}
+                        className="mb-2 text-[#4f5c55] sm:mb-3"
                         aria-hidden="true"
                       />
-                      <h3 className="text-sm font-semibold text-[#313a35]">
+                      <h3 className="text-xs font-semibold text-[#313a35] sm:text-sm">
                         {card.title}
                       </h3>
-                      <p className="mt-2 text-sm leading-6 text-[#6c5f57]">
+                      <p className="mt-1 text-xs leading-5 text-[#6c5f57] sm:mt-2 sm:text-sm sm:leading-6">
                         {card.detail}
                       </p>
                     </article>
@@ -445,7 +451,7 @@ export default async function Home() {
               </div>
 
               <div
-                className="mt-4 rounded-lg border border-[#eee5dd] bg-[#fffdfb] p-4"
+                className="mt-4 rounded-lg border border-[#eee5dd] bg-[#fffdfb] p-3 sm:p-4"
                 id="promemoria"
               >
                 <div className="mb-3 flex items-center justify-between">
@@ -478,8 +484,8 @@ export default async function Home() {
               </div>
             </div>
 
-            <div className="rounded-lg border border-[#eadfd7] bg-white p-5 shadow-sm">
-              <div className="mb-5 flex items-center justify-between">
+            <div className="rounded-lg border border-[#eadfd7] bg-white p-4 shadow-sm sm:p-5">
+              <div className="mb-4 flex items-center justify-between sm:mb-5">
                 <h2 className="text-sm font-semibold uppercase text-[#7a6f68]">
                   Archivio salute
                 </h2>
@@ -495,7 +501,7 @@ export default async function Home() {
 
                   return (
                     <Link
-                      className="group flex items-center justify-between rounded-lg border border-[#eee5dd] bg-[#fffdfb] px-4 py-3 transition hover:border-[#d5e0d8] hover:bg-[#f8fbf7]"
+                      className="group flex items-center justify-between rounded-lg border border-[#eee5dd] bg-[#fffdfb] px-3 py-2.5 transition hover:border-[#d5e0d8] hover:bg-[#f8fbf7] sm:px-4 sm:py-3"
                       href={item.href}
                       key={item.href}
                     >
@@ -509,7 +515,7 @@ export default async function Home() {
                           <span className="block text-sm font-semibold text-[#313a35]">
                             {item.title}
                           </span>
-                          <span className="block text-xs text-[#7a6f68]">
+                          <span className="hidden text-xs text-[#7a6f68] sm:block">
                             {item.detail}
                           </span>
                         </span>
@@ -526,13 +532,13 @@ export default async function Home() {
             </div>
           </section>
 
-          <section className="rounded-lg border border-[#eadfd7] bg-white p-5 shadow-sm">
-            <div className="mb-5 flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
+          <section className="rounded-lg border border-[#eadfd7] bg-white p-4 shadow-sm sm:p-5">
+            <div className="mb-4 flex flex-col justify-between gap-3 sm:mb-5 sm:flex-row sm:items-center">
               <div>
-                <p className="text-sm font-medium text-[#947b6a]">
+                <p className="text-xs font-semibold uppercase text-[#947b6a] sm:text-sm sm:normal-case">
                   Agenda medica
                 </p>
-                <h2 className="mt-1 text-2xl font-semibold text-[#29302d]">
+                <h2 className="mt-1 text-xl font-semibold text-[#29302d] sm:text-2xl">
                   Visite per persona
                 </h2>
               </div>
@@ -546,16 +552,16 @@ export default async function Home() {
             </div>
 
             {visits.length > 0 ? (
-              <div className="grid gap-4">
+              <div className="grid gap-3 sm:gap-4">
                 {visitGroups.map((group) => (
                   <section
-                    className="rounded-lg border border-[#eee5dd] bg-[#fffdfb] p-4"
+                    className="rounded-lg border border-[#eee5dd] bg-[#fffdfb] p-3 sm:p-4"
                     key={group.name}
                   >
-                    <div className="mb-3 flex items-center justify-between gap-3">
+                    <div className="mb-2 flex items-center justify-between gap-3 sm:mb-3">
                       <div className="flex items-center gap-3">
                         <div
-                          className={`flex size-9 items-center justify-center rounded-lg ${group.tone} text-sm font-semibold text-[#313a35]`}
+                          className={`flex size-8 items-center justify-center rounded-lg ${group.tone} text-sm font-semibold text-[#313a35] sm:size-9`}
                         >
                           {group.name.slice(0, 1)}
                         </div>
@@ -577,12 +583,12 @@ export default async function Home() {
                       <div className="grid gap-3">
                         {group.visits.map((visit) => (
                         <article
-                          className="grid gap-4 rounded-lg border border-[#eee5dd] bg-white p-4 md:grid-cols-[1fr_auto]"
+                          className="grid gap-3 rounded-lg border border-[#eee5dd] bg-white p-3 sm:gap-4 sm:p-4 md:grid-cols-[1fr_auto]"
                           key={visit.id}
                         >
                           <div className="flex gap-3">
-                            <div className="flex size-11 shrink-0 items-center justify-center rounded-lg bg-[#dbe7fb] text-[#375479]">
-                              <Stethoscope size={21} aria-hidden="true" />
+                            <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-[#dbe7fb] text-[#375479] sm:size-11">
+                              <Stethoscope size={19} aria-hidden="true" />
                             </div>
                             <div>
                               <div className="flex flex-wrap items-center gap-2">
@@ -636,7 +642,7 @@ export default async function Home() {
                         ))}
                       </div>
                     ) : (
-                      <div className="rounded-lg border border-dashed border-[#d9cfc6] bg-white px-4 py-3 text-sm text-[#6c5f57]">
+                      <div className="rounded-md border border-dashed border-[#d9cfc6] bg-white px-3 py-2 text-xs text-[#6c5f57] sm:rounded-lg sm:px-4 sm:py-3 sm:text-sm">
                         Nessuna visita per questa persona.
                       </div>
                     )}

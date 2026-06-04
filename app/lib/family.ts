@@ -25,8 +25,6 @@ type StoredFamily = {
 };
 
 export async function getFamilyMembers(user: CurrentUser): Promise<FamilyMember[]> {
-  if (user.familyId === "famiglia-addante") return addanteMembers;
-
   await connectMongo();
 
   const family = await mongoose.connection
@@ -42,6 +40,8 @@ export async function getFamilyMembers(user: CurrentUser): Promise<FamilyMember[
     .filter((member) => member.name);
 
   if (members.length > 0) return members;
+
+  if (user.familyId === "famiglia-addante") return addanteMembers;
 
   return [{ name: user.name, role: "Utente principale", tone: tones[0] }];
 }
