@@ -659,7 +659,7 @@ export default async function Home() {
 
           <div className="flex items-center gap-2">
             <Link
-              className="flex h-10 items-center gap-2 rounded-md border border-[#e3d7cf] bg-white px-3 text-sm font-medium text-[#4f5c55] shadow-sm transition hover:bg-[#f8f1ec]"
+              className="hidden h-10 items-center gap-2 rounded-md border border-[#e3d7cf] bg-white px-3 text-sm font-medium text-[#4f5c55] shadow-sm transition hover:bg-[#f8f1ec] md:flex"
               href="/reminders"
             >
               <Bell size={17} aria-hidden="true" />
