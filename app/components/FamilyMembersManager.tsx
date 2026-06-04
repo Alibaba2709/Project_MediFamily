@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { Trash2 } from "lucide-react";
 import { FamilyMember } from "@/app/lib/family";
 import { AddFamilyMemberForm } from "@/app/components/AddFamilyMemberForm";
-import { MemberAvatar } from "@/app/components/MemberAvatar";
 import { ProfileImageControl } from "@/app/components/ProfileImageControl";
 
 const FREE_MEMBER_LIMIT = 6;
@@ -65,8 +64,13 @@ export function FamilyMembersManager({
             key={member.name}
           >
             <span className="flex min-w-0 items-center gap-3">
-              <MemberAvatar
+              <ProfileImageControl
+                avatarClassName="size-9"
+                compact
+                hasImage={Boolean(member.imageDataUrl)}
                 imageDataUrl={member.imageDataUrl}
+                memberName={member.name}
+                mode="avatar"
                 name={member.name}
                 tone={member.tone}
               />
@@ -80,11 +84,6 @@ export function FamilyMembersManager({
               </span>
             </span>
             <div className="flex items-center justify-between gap-2 sm:justify-end">
-              <ProfileImageControl
-                compact
-                hasImage={Boolean(member.imageDataUrl)}
-                memberName={member.name}
-              />
               <button
                 aria-label={`Rimuovi ${member.name}`}
                 className="flex size-8 shrink-0 items-center justify-center rounded-md text-[#9f4d46] transition hover:bg-[#fdece8] disabled:cursor-not-allowed disabled:opacity-35"

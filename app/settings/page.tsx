@@ -11,7 +11,6 @@ import { FamilyMembersManager } from "@/app/components/FamilyMembersManager";
 import { BookingSettingsForm } from "@/app/components/BookingSettingsForm";
 import { NotificationSettingsForm } from "@/app/components/NotificationSettingsForm";
 import { FamilyAccessManager } from "@/app/components/FamilyAccessManager";
-import { MemberAvatar } from "@/app/components/MemberAvatar";
 import { ProfileImageControl } from "@/app/components/ProfileImageControl";
 import { User } from "@/app/models/User";
 import { FamilyInvite } from "@/app/models/FamilyInvite";
@@ -113,11 +112,14 @@ export default async function SettingsPage() {
               Profilo
             </h2>
             <div className="mt-4 flex items-start gap-3">
-              <MemberAvatar
-                className="size-14"
+              <ProfileImageControl
+                avatarClassName="size-14"
+                avatarTextClassName="text-lg"
+                hasImage={Boolean(currentMember?.imageDataUrl)}
                 imageDataUrl={currentMember?.imageDataUrl}
+                memberName={user.name}
+                mode="avatar"
                 name={user.name}
-                textClassName="text-lg"
                 tone={currentMember?.tone ?? "bg-[#f9d8d6]"}
               />
               <div className="min-w-0 space-y-3 text-sm">
@@ -133,10 +135,6 @@ export default async function SettingsPage() {
                   <span className="font-semibold text-[#29302d]">Ruolo:</span>{" "}
                   <span className="text-[#6c5f57]">{user.role}</span>
                 </p>
-                <ProfileImageControl
-                  hasImage={Boolean(currentMember?.imageDataUrl)}
-                  memberName={user.name}
-                />
               </div>
             </div>
           </article>

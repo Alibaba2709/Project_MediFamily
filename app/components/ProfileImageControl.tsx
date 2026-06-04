@@ -3,6 +3,7 @@
 import { ChangeEvent, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Camera, Loader2, Trash2 } from "lucide-react";
+import { MemberAvatar } from "@/app/components/MemberAvatar";
 
 const MAX_IMAGE_BYTES = 1024 * 1024;
 const MAX_SOURCE_BYTES = 12 * 1024 * 1024;
@@ -11,6 +12,12 @@ type ProfileImageControlProps = {
   memberName: string;
   hasImage?: boolean;
   compact?: boolean;
+  mode?: "buttons" | "avatar";
+  name?: string;
+  tone?: string;
+  imageDataUrl?: string;
+  avatarClassName?: string;
+  avatarTextClassName?: string;
 };
 
 function loadImage(file: File) {
@@ -88,6 +95,12 @@ export function ProfileImageControl({
   memberName,
   hasImage,
   compact,
+  mode = "buttons",
+  name,
+  tone = "bg-[#f9d8d6]",
+  imageDataUrl,
+  avatarClassName = "size-9",
+  avatarTextClassName = "text-sm",
 }: ProfileImageControlProps) {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -158,6 +171,58 @@ export function ProfileImageControl({
     } finally {
       setIsSaving(false);
     }
+  }
+
+  if (mode === "avatar") {
+    return (
+      <div className="relative inline-flex">
+        <input
+          accept="image/*"
+          className="hidden"
+          onChange={handleFileChange}
+          ref={inputRef}
+          type="file"
+        />
+        <button
+          aria-label={`Cambia foto profilo di ${name ?? memberName}`}
+          className="relative rounded-lg outline-none transition hover:opacity-90 focus-visible:ring-2 focus-visible:ring-[#8fa4d8] disabled:cursor-wait disabled:opacity-60"
+          disabled={isSaving}
+          onClick={() => inputRef.current?.click()}
+          type="button"
+        >
+          <MemberAvatar
+            className={avatarClassName}
+            imageDataUrl={imageDataUrl}
+            name={name ?? memberName}
+            textClassName={avatarTextClassName}
+            tone={tone}
+          />
+          <span className="absolute -bottom-1 -right-1 flex size-5 items-center justify-center rounded-full border border-white bg-[#f6fbf7] text-[#315a45] shadow-sm">
+            {isSaving ? (
+              <Loader2 className="animate-spin" size={12} aria-hidden="true" />
+            ) : (
+              <Camera size={12} aria-hidden="true" />
+            )}
+          </span>
+        </button>
+        {hasImage ? (
+          <button
+            aria-label={`Rimuovi foto profilo di ${name ?? memberName}`}
+            className="absolute -right-1 -top-1 flex size-5 items-center justify-center rounded-full border border-white bg-[#fff7f5] text-[#9f4d46] shadow-sm transition hover:bg-[#fdece8] disabled:cursor-wait disabled:opacity-60"
+            disabled={isSaving}
+            onClick={removeImage}
+            type="button"
+          >
+            <Trash2 size={11} aria-hidden="true" />
+          </button>
+        ) : null}
+        {error ? (
+          <span className="sr-only" role="status">
+            {error}
+          </span>
+        ) : null}
+      </div>
+    );
   }
 
   return (

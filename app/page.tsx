@@ -29,6 +29,7 @@ import { AddFamilyMemberForm } from "@/app/components/AddFamilyMemberForm";
 import { CancelVisitButton } from "@/app/components/CancelVisitButton";
 import { GlobalSearch } from "@/app/components/GlobalSearch";
 import { MemberAvatar } from "@/app/components/MemberAvatar";
+import { ProfileImageControl } from "@/app/components/ProfileImageControl";
 import type { SearchItem } from "@/app/components/GlobalSearch";
 import {
   getFamilyBookingSettings,
@@ -709,27 +710,50 @@ export default async function Home() {
                 Membri
               </div>
               <div className="space-y-2">
-                {members.map((member) => (
-                  <Link
-                    className="flex items-center gap-3 rounded-md p-1 transition hover:bg-[#fffaf6]"
-                    href={`/members/${memberSlug(member.name)}`}
-                    key={member.name}
-                  >
-                    <MemberAvatar
-                      imageDataUrl={member.imageDataUrl}
-                      name={member.name}
-                      tone={member.tone}
-                    />
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-semibold text-[#313a35]">
-                        {member.name}
-                      </p>
-                      <p className="truncate text-xs text-[#7a6f68]">
-                        {member.role}
-                      </p>
+                {members.map((member) => {
+                  const canEditPhoto =
+                    user.role === "owner" ||
+                    member.name.toLowerCase() === user.name.toLowerCase();
+
+                  return (
+                    <div
+                      className="flex items-center gap-3 rounded-md p-1 transition hover:bg-[#fffaf6]"
+                      key={member.name}
+                    >
+                      {canEditPhoto ? (
+                        <ProfileImageControl
+                          avatarClassName="size-9"
+                          compact
+                          hasImage={Boolean(member.imageDataUrl)}
+                          imageDataUrl={member.imageDataUrl}
+                          memberName={member.name}
+                          mode="avatar"
+                          name={member.name}
+                          tone={member.tone}
+                        />
+                      ) : (
+                        <MemberAvatar
+                          imageDataUrl={member.imageDataUrl}
+                          name={member.name}
+                          tone={member.tone}
+                        />
+                      )}
+                      <Link
+                        className="min-w-0 flex-1"
+                        href={`/members/${memberSlug(member.name)}`}
+                      >
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-semibold text-[#313a35]">
+                            {member.name}
+                          </p>
+                          <p className="truncate text-xs text-[#7a6f68]">
+                            {member.role}
+                          </p>
+                        </div>
+                      </Link>
                     </div>
-                  </Link>
-                ))}
+                  );
+                })}
                 <AddFamilyMemberForm
                   compact
                   currentCount={members.length}
