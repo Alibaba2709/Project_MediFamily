@@ -127,6 +127,11 @@ function formatDate(value?: string) {
 
 type MedicationItem = Awaited<ReturnType<typeof getMedications>>[number];
 type IntakeItem = Awaited<ReturnType<typeof getTodayIntakes>>[number];
+type MedicationsPageProps = {
+  searchParams?: Promise<{
+    member?: string;
+  }>;
+};
 
 function getDoseStatusLabel(
   time: string,
@@ -233,7 +238,9 @@ function groupMedicationsByMember(
   ];
 }
 
-export default async function MedicationsPage() {
+export default async function MedicationsPage({
+  searchParams,
+}: MedicationsPageProps) {
   const user = await requireVerifiedUser();
   const canEdit = user.role !== "viewer";
   const members = await getFamilyMembers(user);
@@ -251,9 +258,6 @@ export default async function MedicationsPage() {
     intakes,
     today
   );
-  const todayMedicationIds = Array.from(
-    new Set(todayTherapies.map((therapy) => therapy.medicationId))
-  );
   const memberNames = normalizeFamilyMemberNames(
     [
       ...members.map((member) => member.name),
@@ -261,10 +265,19 @@ export default async function MedicationsPage() {
     ],
     members
   );
+  const params = await searchParams;
+  const selectedMember =
+    params?.member && memberNames.includes(params.member)
+      ? params.member
+      : "all";
   const medicationGroups = groupMedicationsByMember(
     visibleMedications,
     members
   );
+  const filteredMedicationGroups =
+    selectedMember === "all"
+      ? medicationGroups
+      : medicationGroups.filter((group) => group.name === selectedMember);
   const todayTherapiesByMember = members
     .map((member) => ({
       ...member,
@@ -273,6 +286,21 @@ export default async function MedicationsPage() {
       ),
     }))
     .filter((group) => group.therapies.length > 0);
+  const filteredTodayTherapiesByMember =
+    selectedMember === "all"
+      ? todayTherapiesByMember
+      : todayTherapiesByMember.filter((group) => group.name === selectedMember);
+  const filteredTodayTherapies = filteredTodayTherapiesByMember.flatMap(
+    (group) => group.therapies
+  );
+  const filteredRecentIntakes =
+    selectedMember === "all"
+      ? recentIntakes
+      : recentIntakes.filter(
+          (intake) =>
+            displayFamilyMemberName(intake.memberName, members) ===
+            selectedMember
+        );
 
   return (
     <main className="min-h-screen bg-[#fffaf6] px-5 py-6 text-[#2f3330] sm:px-8">
@@ -308,6 +336,40 @@ export default async function MedicationsPage() {
           </div>
         </section>
 
+        <section className="rounded-lg border border-[#eadfd7] bg-white p-4 shadow-sm">
+          <p className="text-sm font-semibold uppercase text-[#947b6a]">
+            Visualizza terapie
+          </p>
+          <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
+            <Link
+              className={
+                selectedMember === "all"
+                  ? "whitespace-nowrap rounded-md bg-[#315a45] px-3 py-2 text-sm font-semibold text-white"
+                  : "whitespace-nowrap rounded-md border border-[#ded4cb] bg-[#fffdfb] px-3 py-2 text-sm font-semibold text-[#4f5c55]"
+              }
+              href="/medications"
+            >
+              Tutti
+            </Link>
+            {memberNames.map((memberName) => (
+              <Link
+                className={
+                  selectedMember === memberName
+                    ? "whitespace-nowrap rounded-md bg-[#315a45] px-3 py-2 text-sm font-semibold text-white"
+                    : "whitespace-nowrap rounded-md border border-[#ded4cb] bg-[#fffdfb] px-3 py-2 text-sm font-semibold text-[#4f5c55]"
+                }
+                href={{
+                  pathname: "/medications",
+                  query: { member: memberName },
+                }}
+                key={memberName}
+              >
+                {memberName}
+              </Link>
+            ))}
+          </div>
+        </section>
+
         <section className="rounded-lg border border-[#eadfd7] bg-white p-5 shadow-sm">
           <div className="mb-4 flex items-center justify-between gap-3">
             <div className="flex items-center gap-3">
@@ -324,15 +386,15 @@ export default async function MedicationsPage() {
               </div>
             </div>
             <span className="rounded-md bg-[#f6fbf7] px-2 py-1 text-xs font-semibold text-[#315a45]">
-              {todayTherapies.length === 1
+              {filteredTodayTherapies.length === 1
                 ? "1 dose"
-                : `${todayTherapies.length} dosi`}
+                : `${filteredTodayTherapies.length} dosi`}
             </span>
           </div>
 
-          {todayTherapiesByMember.length > 0 ? (
+          {filteredTodayTherapiesByMember.length > 0 ? (
             <div className="grid gap-4">
-              {todayTherapiesByMember.map((group) => (
+              {filteredTodayTherapiesByMember.map((group) => (
                 <div
                   className="rounded-lg border border-[#eadfd7] bg-[#fffdfb] p-4"
                   key={group.name}
@@ -404,7 +466,7 @@ export default async function MedicationsPage() {
           )}
         </section>
 
-        {recentIntakes.length > 0 ? (
+        {filteredRecentIntakes.length > 0 ? (
           <section className="rounded-lg border border-[#eadfd7] bg-white p-5 shadow-sm">
             <div className="mb-3 flex items-center justify-between gap-3">
               <div>
@@ -417,7 +479,7 @@ export default async function MedicationsPage() {
               </div>
             </div>
             <div className="grid gap-2">
-              {recentIntakes.map((intake) => (
+              {filteredRecentIntakes.map((intake) => (
                 <div
                   className="flex flex-col gap-2 rounded-lg border border-[#eadfd7] bg-[#fffdfb] px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
                   key={`${intake.medicationId}-${intake.intakeDate}-${intake.intakeTime}`}
@@ -447,9 +509,13 @@ export default async function MedicationsPage() {
         {visibleMedications.length > 0 ? (
           <MedicationArchive
             canEdit={canEdit}
-            groups={medicationGroups}
+            groups={filteredMedicationGroups}
             memberNames={memberNames}
-            todayMedicationIds={todayMedicationIds}
+            todayMedicationIds={Array.from(
+              new Set(
+                filteredTodayTherapies.map((therapy) => therapy.medicationId)
+              )
+            )}
           />
         ) : (
           <section className="rounded-lg border border-dashed border-[#d9cfc6] bg-white p-6 text-center shadow-sm">
