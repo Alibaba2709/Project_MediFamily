@@ -41,10 +41,17 @@ function buildInitialForm(
   recipe?: EditableRecipe,
   familyMembers: string[] = fallbackFamilyMembers
 ) {
-  if (!recipe) return initialForm;
+  const defaultMember = familyMembers[0] || fallbackFamilyMembers[0];
+
+  if (!recipe) {
+    return {
+      ...initialForm,
+      memberName: defaultMember,
+    };
+  }
 
   return {
-    memberName: recipe.memberName || familyMembers[0] || fallbackFamilyMembers[0],
+    memberName: recipe.memberName || defaultMember,
     medicationName: recipe.medicationName,
     recipeCode: recipe.recipeCode ?? "",
     doctor: recipe.doctor ?? "",
@@ -103,7 +110,7 @@ export function RecipeForm({
       return;
     }
 
-    setForm(buildInitialForm(recipe));
+    setForm(buildInitialForm(recipe, familyMembers));
     setIsOpen(false);
     router.refresh();
   }

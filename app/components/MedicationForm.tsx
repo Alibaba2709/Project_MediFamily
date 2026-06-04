@@ -41,11 +41,17 @@ function buildInitialForm(
   medication?: EditableMedication,
   familyMembers: string[] = fallbackFamilyMembers
 ) {
-  if (!medication) return initialForm;
+  const defaultMember = familyMembers[0] || fallbackFamilyMembers[0];
+
+  if (!medication) {
+    return {
+      ...initialForm,
+      memberName: defaultMember,
+    };
+  }
 
   return {
-    memberName:
-      medication.memberName || familyMembers[0] || fallbackFamilyMembers[0],
+    memberName: medication.memberName || defaultMember,
     name: medication.name,
     dosage: medication.dosage ?? "",
     schedule: medication.schedule ?? "",
@@ -110,7 +116,7 @@ export function MedicationForm({
       return;
     }
 
-    setForm(buildInitialForm(medication));
+    setForm(buildInitialForm(medication, familyMembers));
     setIsOpen(false);
     router.refresh();
   }

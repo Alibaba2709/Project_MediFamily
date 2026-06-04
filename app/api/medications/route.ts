@@ -29,6 +29,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Non autorizzata." }, { status: 401 });
   }
 
+  if (!canEditHealth(user)) return forbidden();
+
   await connectMongo();
 
   const body = await request.json();

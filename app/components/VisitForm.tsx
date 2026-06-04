@@ -51,10 +51,17 @@ function buildInitialForm(
   visit?: EditableVisit,
   familyMembers: string[] = fallbackFamilyMembers
 ): VisitFormState {
-  if (!visit) return initialForm;
+  const defaultMember = familyMembers[0] || fallbackFamilyMembers[0];
+
+  if (!visit) {
+    return {
+      ...initialForm,
+      memberName: defaultMember,
+    };
+  }
 
   return {
-    memberName: visit.memberName || familyMembers[0] || fallbackFamilyMembers[0],
+    memberName: visit.memberName || defaultMember,
     title: visit.title,
     doctor: visit.doctor ?? "",
     location: visit.location ?? "",

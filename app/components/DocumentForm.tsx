@@ -44,11 +44,17 @@ function buildInitialForm(
   document?: EditableDocument,
   familyMembers: string[] = fallbackFamilyMembers
 ) {
-  if (!document) return initialForm;
+  const defaultMember = familyMembers[0] || fallbackFamilyMembers[0];
+
+  if (!document) {
+    return {
+      ...initialForm,
+      memberName: defaultMember,
+    };
+  }
 
   return {
-    memberName:
-      document.memberName || familyMembers[0] || fallbackFamilyMembers[0],
+    memberName: document.memberName || defaultMember,
     visitId: document.visitId ?? "",
     title: document.title,
     category: document.category,
@@ -131,7 +137,7 @@ export function DocumentForm({
       return;
     }
 
-    setForm(buildInitialForm(document));
+    setForm(buildInitialForm(document, familyMembers));
     setFile(null);
     setIsOpen(false);
     router.refresh();
