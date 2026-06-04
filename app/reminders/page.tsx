@@ -188,6 +188,12 @@ export default async function RemindersPage() {
   const user = await requireVerifiedUser();
   const members = await getFamilyMembers(user);
   const reminders = await getReminders(user.familyId);
+  const reminderMemberNames = Array.from(
+    new Set([
+      ...members.map((member) => member.name),
+      ...reminders.map((reminder) => reminder.memberName),
+    ])
+  ).filter(Boolean);
 
   return (
     <main className="min-h-screen bg-[#fffaf6] px-5 py-6 text-[#2f3330] sm:px-8">
@@ -221,7 +227,7 @@ export default async function RemindersPage() {
         </section>
 
         <ReminderFilters
-          members={members.map((member) => member.name)}
+          members={reminderMemberNames}
           reminders={reminders}
         />
       </div>

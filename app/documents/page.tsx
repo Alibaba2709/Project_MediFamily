@@ -106,9 +106,15 @@ export default async function DocumentsPage() {
   const user = await requireVerifiedUser();
   const canEdit = user.role !== "viewer";
   const members = await getFamilyMembers(user);
-  const memberNames = members.map((member) => member.name);
   const documents = await getDocuments(user.familyId);
   const visits = await getLinkableVisits(user.familyId);
+  const memberNames = Array.from(
+    new Set([
+      ...members.map((member) => member.name),
+      ...documents.map((document) => document.memberName),
+      ...visits.map((visit) => visit.memberName),
+    ])
+  ).filter(Boolean);
   const visitsById = new Map(visits.map((visit) => [visit.id, visit]));
 
   return (

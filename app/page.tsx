@@ -460,10 +460,29 @@ function groupVisitsByMember(
   visits: DashboardVisit[],
   members: Awaited<ReturnType<typeof getFamilyMembers>>
 ) {
-  return members.map((member) => ({
+  const knownMemberNames = new Set(members.map((member) => member.name));
+  const memberGroups = members.map((member) => ({
     ...member,
     visits: visits.filter((visit) => visit.memberName === member.name),
   }));
+  const savedOnlyNames = Array.from(
+    new Set(
+      visits
+        .map((visit) => visit.memberName)
+        .filter((name) => name && !knownMemberNames.has(name))
+    )
+  );
+
+  return [
+    ...memberGroups,
+    ...savedOnlyNames.map((name) => ({
+      name,
+      role: "Profilo salvato",
+      tone: "bg-[#f7e2bf]",
+      imageDataUrl: undefined,
+      visits: visits.filter((visit) => visit.memberName === name),
+    })),
+  ];
 }
 
 function buildSearchItems(
@@ -561,11 +580,19 @@ export default async function Home() {
   const canEdit = user.role !== "viewer";
   const members = await getFamilyMembers(user);
   const bookingSettings = await getFamilyBookingSettings(user);
-  const memberNames = members.map((member) => member.name);
   const visits = await getVisits(user.familyId);
   const recipes = await getRecipes(user.familyId);
   const medications = await getMedications(user.familyId);
   const documents = await getDocuments(user.familyId);
+  const memberNames = Array.from(
+    new Set([
+      ...members.map((member) => member.name),
+      ...visits.map((visit) => visit.memberName),
+      ...recipes.map((recipe) => recipe.memberName),
+      ...medications.map((medication) => medication.memberName),
+      ...documents.map((document) => document.memberName),
+    ])
+  ).filter(Boolean);
   const documentsByVisitId = new Map<string, DashboardDocument[]>();
   documents.forEach((document) => {
     if (!document.visitId) return;

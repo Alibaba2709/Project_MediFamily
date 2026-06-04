@@ -67,20 +67,44 @@ function groupRecipesByMember(
   recipes: RecipeItem[],
   members: Awaited<ReturnType<typeof getFamilyMembers>>
 ) {
-  return members
+  const knownMemberNames = new Set(members.map((member) => member.name));
+  const memberGroups = members
     .map((member) => ({
       ...member,
       recipes: recipes.filter((recipe) => recipe.memberName === member.name),
     }))
     .filter((group) => group.recipes.length > 0);
+  const savedOnlyNames = Array.from(
+    new Set(
+      recipes
+        .map((recipe) => recipe.memberName)
+        .filter((name) => name && !knownMemberNames.has(name))
+    )
+  );
+
+  return [
+    ...memberGroups,
+    ...savedOnlyNames.map((name) => ({
+      name,
+      role: "Profilo salvato",
+      tone: "bg-[#f7e2bf]",
+      imageDataUrl: undefined,
+      recipes: recipes.filter((recipe) => recipe.memberName === name),
+    })),
+  ];
 }
 
 export default async function RecipesPage() {
   const user = await requireVerifiedUser();
   const canEdit = user.role !== "viewer";
   const members = await getFamilyMembers(user);
-  const memberNames = members.map((member) => member.name);
   const recipes = await getRecipes(user.familyId);
+  const memberNames = Array.from(
+    new Set([
+      ...members.map((member) => member.name),
+      ...recipes.map((recipe) => recipe.memberName),
+    ])
+  ).filter(Boolean);
   const recipeGroups = groupRecipesByMember(recipes, members);
 
   return (
