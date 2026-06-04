@@ -2,7 +2,11 @@ import Link from "next/link";
 import { ArrowLeft, Pill } from "lucide-react";
 import { connectMongo } from "@/app/lib/mongodb";
 import { requireVerifiedUser } from "@/app/lib/auth";
-import { getFamilyMembers } from "@/app/lib/family";
+import {
+  displayFamilyMemberName,
+  getFamilyMembers,
+  normalizeFamilyMemberNames,
+} from "@/app/lib/family";
 import { Medication } from "@/app/models/Medication";
 import { MedicationForm } from "@/app/components/MedicationForm";
 import { DeleteButton } from "@/app/components/DeleteButton";
@@ -93,13 +97,21 @@ export default async function MedicationsPage() {
   const canEdit = user.role !== "viewer";
   const members = await getFamilyMembers(user);
   const medications = await getMedications(user.familyId);
-  const memberNames = Array.from(
-    new Set([
+  const visibleMedications = medications.map((medication) => ({
+    ...medication,
+    memberName: displayFamilyMemberName(medication.memberName, members),
+  }));
+  const memberNames = normalizeFamilyMemberNames(
+    [
       ...members.map((member) => member.name),
       ...medications.map((medication) => medication.memberName),
-    ])
-  ).filter(Boolean);
-  const medicationGroups = groupMedicationsByMember(medications, members);
+    ],
+    members
+  );
+  const medicationGroups = groupMedicationsByMember(
+    visibleMedications,
+    members
+  );
 
   return (
     <main className="min-h-screen bg-[#fffaf6] px-5 py-6 text-[#2f3330] sm:px-8">
@@ -134,7 +146,7 @@ export default async function MedicationsPage() {
           </div>
         </section>
 
-        {medications.length > 0 ? (
+        {visibleMedications.length > 0 ? (
           <section className="grid gap-4">
             {medicationGroups.map((group) => (
               <div

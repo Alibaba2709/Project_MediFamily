@@ -32,9 +32,11 @@ import { MemberAvatar } from "@/app/components/MemberAvatar";
 import { ProfileImageControl } from "@/app/components/ProfileImageControl";
 import type { SearchItem } from "@/app/components/GlobalSearch";
 import {
+  displayFamilyMemberName,
   getFamilyBookingSettings,
   getFamilyMembers,
   memberSlug,
+  normalizeFamilyMemberNames,
 } from "@/app/lib/family";
 
 type DashboardVisit = {
@@ -584,30 +586,50 @@ export default async function Home() {
   const recipes = await getRecipes(user.familyId);
   const medications = await getMedications(user.familyId);
   const documents = await getDocuments(user.familyId);
+  const visibleVisits = visits.map((visit) => ({
+    ...visit,
+    memberName: displayFamilyMemberName(visit.memberName, members),
+  }));
+  const visibleRecipes = recipes.map((recipe) => ({
+    ...recipe,
+    memberName: displayFamilyMemberName(recipe.memberName, members),
+  }));
+  const visibleMedications = medications.map((medication) => ({
+    ...medication,
+    memberName: displayFamilyMemberName(medication.memberName, members),
+  }));
+  const visibleDocuments = documents.map((document) => ({
+    ...document,
+    memberName: displayFamilyMemberName(document.memberName, members),
+  }));
   const memberNames = Array.from(
-    new Set([
+    new Set(normalizeFamilyMemberNames([
       ...members.map((member) => member.name),
       ...visits.map((visit) => visit.memberName),
       ...recipes.map((recipe) => recipe.memberName),
       ...medications.map((medication) => medication.memberName),
       ...documents.map((document) => document.memberName),
-    ])
+    ], members))
   ).filter(Boolean);
   const documentsByVisitId = new Map<string, DashboardDocument[]>();
-  documents.forEach((document) => {
+  visibleDocuments.forEach((document) => {
     if (!document.visitId) return;
     documentsByVisitId.set(document.visitId, [
       ...(documentsByVisitId.get(document.visitId) ?? []),
       document,
     ]);
   });
-  const visitGroups = groupVisitsByMember(visits, members);
-  const urgencyItems = buildUrgencyItems(visits, recipes, medications);
+  const visitGroups = groupVisitsByMember(visibleVisits, members);
+  const urgencyItems = buildUrgencyItems(
+    visibleVisits,
+    visibleRecipes,
+    visibleMedications
+  );
   const searchItems = buildSearchItems(
-    visits,
-    recipes,
-    medications,
-    documents
+    visibleVisits,
+    visibleRecipes,
+    visibleMedications,
+    visibleDocuments
   );
   const paymentCount = visits.filter(
     (visit) => visit.status === "booked" && visit.paymentDueDate

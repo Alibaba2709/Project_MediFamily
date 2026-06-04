@@ -2,7 +2,11 @@ import Link from "next/link";
 import { ArrowLeft, ClipboardList } from "lucide-react";
 import { connectMongo } from "@/app/lib/mongodb";
 import { requireVerifiedUser } from "@/app/lib/auth";
-import { getFamilyMembers } from "@/app/lib/family";
+import {
+  displayFamilyMemberName,
+  getFamilyMembers,
+  normalizeFamilyMemberNames,
+} from "@/app/lib/family";
 import { Recipe } from "@/app/models/Recipe";
 import { RecipeForm } from "@/app/components/RecipeForm";
 import { DeleteButton } from "@/app/components/DeleteButton";
@@ -99,13 +103,18 @@ export default async function RecipesPage() {
   const canEdit = user.role !== "viewer";
   const members = await getFamilyMembers(user);
   const recipes = await getRecipes(user.familyId);
-  const memberNames = Array.from(
-    new Set([
+  const visibleRecipes = recipes.map((recipe) => ({
+    ...recipe,
+    memberName: displayFamilyMemberName(recipe.memberName, members),
+  }));
+  const memberNames = normalizeFamilyMemberNames(
+    [
       ...members.map((member) => member.name),
       ...recipes.map((recipe) => recipe.memberName),
-    ])
-  ).filter(Boolean);
-  const recipeGroups = groupRecipesByMember(recipes, members);
+    ],
+    members
+  );
+  const recipeGroups = groupRecipesByMember(visibleRecipes, members);
 
   return (
     <main className="min-h-screen bg-[#fffaf6] px-5 py-6 text-[#2f3330] sm:px-8">
@@ -140,7 +149,7 @@ export default async function RecipesPage() {
           </div>
         </section>
 
-        {recipes.length > 0 ? (
+        {visibleRecipes.length > 0 ? (
           <section className="grid gap-4">
             {recipeGroups.map((group) => (
               <div

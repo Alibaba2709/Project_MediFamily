@@ -2,7 +2,11 @@ import Link from "next/link";
 import { ArrowLeft, Download, FileText } from "lucide-react";
 import { connectMongo } from "@/app/lib/mongodb";
 import { requireVerifiedUser } from "@/app/lib/auth";
-import { getFamilyMembers } from "@/app/lib/family";
+import {
+  displayFamilyMemberName,
+  getFamilyMembers,
+  normalizeFamilyMemberNames,
+} from "@/app/lib/family";
 import { HealthDocument } from "@/app/models/HealthDocument";
 import { Visit } from "@/app/models/Visit";
 import { DocumentForm } from "@/app/components/DocumentForm";
@@ -108,13 +112,22 @@ export default async function DocumentsPage() {
   const members = await getFamilyMembers(user);
   const documents = await getDocuments(user.familyId);
   const visits = await getLinkableVisits(user.familyId);
-  const memberNames = Array.from(
-    new Set([
+  const visibleDocuments = documents.map((document) => ({
+    ...document,
+    memberName: displayFamilyMemberName(document.memberName, members),
+  }));
+  const visibleVisits = visits.map((visit) => ({
+    ...visit,
+    memberName: displayFamilyMemberName(visit.memberName, members),
+  }));
+  const memberNames = normalizeFamilyMemberNames(
+    [
       ...members.map((member) => member.name),
       ...documents.map((document) => document.memberName),
       ...visits.map((visit) => visit.memberName),
-    ])
-  ).filter(Boolean);
+    ],
+    members
+  );
   const visitsById = new Map(visits.map((visit) => [visit.id, visit]));
 
   return (
@@ -129,7 +142,7 @@ export default async function DocumentsPage() {
             Dashboard
           </Link>
           {canEdit ? (
-            <DocumentForm familyMembers={memberNames} visits={visits} />
+            <DocumentForm familyMembers={memberNames} visits={visibleVisits} />
           ) : null}
         </div>
 
@@ -152,9 +165,9 @@ export default async function DocumentsPage() {
           </div>
         </section>
 
-        {documents.length > 0 ? (
+        {visibleDocuments.length > 0 ? (
           <section className="grid gap-3">
-            {documents.map((document) => (
+            {visibleDocuments.map((document) => (
               <article
                 className="rounded-lg border border-[#eadfd7] bg-white p-4 shadow-sm"
                 key={document.id}
@@ -199,7 +212,7 @@ export default async function DocumentsPage() {
                         mode="edit"
                         document={document}
                         familyMembers={memberNames}
-                        visits={visits}
+                        visits={visibleVisits}
                       />
                     ) : null}
                     {document.fileName ? (

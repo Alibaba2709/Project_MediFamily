@@ -2,7 +2,12 @@ import Link from "next/link";
 import { ArrowLeft, Bell } from "lucide-react";
 import { connectMongo } from "@/app/lib/mongodb";
 import { requireVerifiedUser } from "@/app/lib/auth";
-import { getFamilyMembers } from "@/app/lib/family";
+import {
+  displayFamilyMemberName,
+  getFamilyMembers,
+  normalizeFamilyMemberNames,
+  type FamilyMember,
+} from "@/app/lib/family";
 import { Visit } from "@/app/models/Visit";
 import { Recipe } from "@/app/models/Recipe";
 import { Medication } from "@/app/models/Medication";
@@ -66,7 +71,10 @@ function withinNextDays(value: string, days: number) {
   return date >= today && date <= limit;
 }
 
-async function getReminders(familyId: string): Promise<ReminderViewItem[]> {
+async function getReminders(
+  familyId: string,
+  members: FamilyMember[]
+): Promise<ReminderViewItem[]> {
   await connectMongo();
 
   const [visits, recipes, medications, documents] = await Promise.all([
@@ -89,13 +97,15 @@ async function getReminders(familyId: string): Promise<ReminderViewItem[]> {
     const items: ReminderViewItem[] = [];
 
     if (withinNextDays(visitDate, 3)) {
+      const memberName = displayFamilyMemberName(visit.memberName, members);
+
       items.push({
         date: visitDate,
-        detail: `${visit.memberName} · ${visit.title}${
+        detail: `${memberName} · ${visit.title}${
           visit.visitTime ? ` · ${visit.visitTime}` : ""
         }`,
         href: "/calendar",
-        memberName: visit.memberName,
+        memberName,
         title: "Visita imminente",
         tone: "border-[#d5e0d8] bg-[#f6fbf7] text-[#315a45]",
         type: "visit",
@@ -104,13 +114,15 @@ async function getReminders(familyId: string): Promise<ReminderViewItem[]> {
 
     if (visit.paymentDueDate) {
       const paymentDate = visit.paymentDueDate.toISOString();
+      const memberName = displayFamilyMemberName(visit.memberName, members);
+
       items.push({
         date: paymentDate,
-        detail: `${visit.memberName} · ${visit.title} · entro ${formatDate(
+        detail: `${memberName} · ${visit.title} · entro ${formatDate(
           paymentDate
         )}`,
         href: "/payments",
-        memberName: visit.memberName,
+        memberName,
         title: "Pagamento visita",
         tone: "border-[#f1d8cf] bg-[#fff7f5] text-[#7f5146]",
         type: "payment",
@@ -119,13 +131,15 @@ async function getReminders(familyId: string): Promise<ReminderViewItem[]> {
 
     if (visit.cancellationDueDate) {
       const cancellationDate = visit.cancellationDueDate.toISOString();
+      const memberName = displayFamilyMemberName(visit.memberName, members);
+
       items.push({
         date: cancellationDate,
-        detail: `${visit.memberName} · ${visit.title} · entro ${formatDate(
+        detail: `${memberName} · ${visit.title} · entro ${formatDate(
           cancellationDate
         )}`,
         href: "/calendar",
-        memberName: visit.memberName,
+        memberName,
         title: "Termine disdetta",
         tone: "border-[#f0d3a6] bg-[#fff8e9] text-[#7a5b2f]",
         type: "cancellation",
@@ -133,11 +147,13 @@ async function getReminders(familyId: string): Promise<ReminderViewItem[]> {
     }
 
     if (withinNextDays(visitDate, 7) && !linkedVisitIds.has(visit._id.toString())) {
+      const memberName = displayFamilyMemberName(visit.memberName, members);
+
       items.push({
         date: visitDate,
-        detail: `${visit.memberName} · ${visit.title} · controlla ricetta o referti`,
+        detail: `${memberName} · ${visit.title} · controlla ricetta o referti`,
         href: "/documents",
-        memberName: visit.memberName,
+        memberName,
         title: "Documenti da collegare",
         tone: "border-[#dbe7fb] bg-[#f7faff] text-[#375479]",
         type: "document",
@@ -154,11 +170,14 @@ async function getReminders(familyId: string): Promise<ReminderViewItem[]> {
 
       return {
         date: renewalDate,
-        detail: `${recipe.memberName} · ${recipe.medicationName} · entro ${formatDate(
+        detail: `${displayFamilyMemberName(
+          recipe.memberName,
+          members
+        )} · ${recipe.medicationName} · entro ${formatDate(
           renewalDate
         )}`,
         href: "/recipes",
-        memberName: recipe.memberName,
+        memberName: displayFamilyMemberName(recipe.memberName, members),
         title: "Rinnovo ricetta",
         tone: "border-[#d7d0ec] bg-[#faf7ff] text-[#5d527b]",
         type: "recipe" as const,
@@ -167,11 +186,11 @@ async function getReminders(familyId: string): Promise<ReminderViewItem[]> {
 
   const medicationReminders = medications.map((medication) => ({
     date: new Date().toISOString(),
-    detail: `${medication.memberName} · ${medication.name}${
+    detail: `${displayFamilyMemberName(medication.memberName, members)} · ${medication.name}${
       medication.dosage ? ` · ${medication.dosage}` : ""
     }${medication.schedule ? ` · ${medication.schedule}` : ""}`,
     href: `/medications#medication-${medication._id.toString()}`,
-    memberName: medication.memberName,
+    memberName: displayFamilyMemberName(medication.memberName, members),
     title: "Farmaco attivo",
     tone: "border-[#d5e0d8] bg-[#f6fbf7] text-[#315a45]",
     type: "medication" as const,
@@ -187,13 +206,14 @@ async function getReminders(familyId: string): Promise<ReminderViewItem[]> {
 export default async function RemindersPage() {
   const user = await requireVerifiedUser();
   const members = await getFamilyMembers(user);
-  const reminders = await getReminders(user.familyId);
-  const reminderMemberNames = Array.from(
-    new Set([
+  const reminders = await getReminders(user.familyId, members);
+  const reminderMemberNames = normalizeFamilyMemberNames(
+    [
       ...members.map((member) => member.name),
       ...reminders.map((reminder) => reminder.memberName),
-    ])
-  ).filter(Boolean);
+    ],
+    members
+  );
 
   return (
     <main className="min-h-screen bg-[#fffaf6] px-5 py-6 text-[#2f3330] sm:px-8">

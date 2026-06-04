@@ -78,6 +78,41 @@ export function memberSlug(name: string) {
   return name.toLowerCase().replaceAll(" ", "-");
 }
 
+export function getPrimaryFamilyMemberName(
+  members: FamilyMember[],
+  fallback = "Utente principale"
+) {
+  return (
+    members.find(
+      (member) => member.role.trim().toLowerCase() === "utente principale"
+    )?.name ??
+    members[0]?.name ??
+    fallback
+  );
+}
+
+export function displayFamilyMemberName(
+  memberName: string,
+  members: FamilyMember[]
+) {
+  const name = memberName.trim();
+
+  if (name.toLowerCase() === "utente principale") {
+    return getPrimaryFamilyMemberName(members, name);
+  }
+
+  return name;
+}
+
+export function normalizeFamilyMemberNames(
+  names: string[],
+  members: FamilyMember[]
+) {
+  return Array.from(
+    new Set(names.map((name) => displayFamilyMemberName(name, members)))
+  ).filter(Boolean);
+}
+
 export async function getFamilyBookingSettings(
   user: CurrentUser
 ): Promise<FamilyBookingSettings> {
