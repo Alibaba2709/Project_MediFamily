@@ -11,6 +11,7 @@ type StoredVisit = {
   location?: string;
   visitDate: Date;
   visitTime?: string;
+  notes?: string;
   status?: "booked" | "paid" | "cancelled" | "completed";
 };
 
@@ -29,6 +30,7 @@ async function getVisits(familyId: string) {
       location: visit.location,
       visitDate: visit.visitDate.toISOString(),
       visitTime: visit.visitTime,
+      notes: visit.notes,
       status: visit.status ?? "booked",
     }));
   } catch {
@@ -94,6 +96,14 @@ export default async function CalendarPage() {
                       {visit.memberName}
                       {visit.location ? ` · ${visit.location}` : ""}
                     </p>
+                    {visit.notes ? (
+                      <p className="mt-2 rounded-md bg-[#fffaf6] px-3 py-2 text-sm leading-6 text-[#6c5f57]">
+                        <span className="font-semibold text-[#4f5c55]">
+                          Note:
+                        </span>{" "}
+                        {visit.notes}
+                      </p>
+                    ) : null}
                   </div>
                   <div className="flex items-center gap-2 text-sm font-semibold text-[#315a45]">
                     <Clock3 size={17} aria-hidden="true" />

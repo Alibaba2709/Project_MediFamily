@@ -1,12 +1,14 @@
 import Link from "next/link";
 import { ArrowLeft, Settings } from "lucide-react";
 import { requireVerifiedUser } from "@/app/lib/auth";
-import { getFamilyMembers } from "@/app/lib/family";
+import { getFamilyBookingSettings, getFamilyMembers } from "@/app/lib/family";
 import { FamilyMembersManager } from "@/app/components/FamilyMembersManager";
+import { BookingSettingsForm } from "@/app/components/BookingSettingsForm";
 
 export default async function SettingsPage() {
   const user = await requireVerifiedUser();
   const members = await getFamilyMembers(user);
+  const bookingSettings = await getFamilyBookingSettings(user);
 
   return (
     <main className="min-h-screen bg-[#fffaf6] px-5 py-6 text-[#2f3330] sm:px-8">
@@ -65,6 +67,10 @@ export default async function SettingsPage() {
               currentUserName={user.name}
               members={members}
             />
+          </article>
+
+          <article className="rounded-lg border border-[#eadfd7] bg-white p-5 shadow-sm md:col-span-2">
+            <BookingSettingsForm settings={bookingSettings} />
           </article>
         </section>
       </div>

@@ -1,5 +1,11 @@
 import Link from "next/link";
-import { ArrowLeft, ClipboardList, FileText, Pill, Stethoscope } from "lucide-react";
+import {
+  ArrowLeft,
+  ClipboardList,
+  FileText,
+  Pill,
+  Stethoscope,
+} from "lucide-react";
 import { connectMongo } from "@/app/lib/mongodb";
 import { requireVerifiedUser } from "@/app/lib/auth";
 import { getFamilyMembers, memberSlug } from "@/app/lib/family";
@@ -87,10 +93,16 @@ export default async function MemberPage(context: RouteContext) {
           <ProfilePanel icon={Stethoscope} title="Visite">
             {visits.length ? (
               visits.map((visit) => (
-                <p className="text-sm text-[#6c5f57]" key={String(visit._id)}>
-                  {visit.title} · {formatDate(visit.visitDate)}
-                  {visit.visitTime ? ` · ${visit.visitTime}` : ""}
-                </p>
+                <div
+                  className="rounded-md bg-[#fffaf6] px-3 py-2"
+                  key={String(visit._id)}
+                >
+                  <p className="text-sm font-semibold text-[#4f5c55]">
+                    {visit.title} · {formatDate(visit.visitDate)}
+                    {visit.visitTime ? ` · ${visit.visitTime}` : ""}
+                  </p>
+                  {visit.notes ? <ItemNote>{visit.notes}</ItemNote> : null}
+                </div>
               ))
             ) : (
               <p className="text-sm text-[#6c5f57]">Nessuna visita.</p>
@@ -100,9 +112,16 @@ export default async function MemberPage(context: RouteContext) {
           <ProfilePanel icon={ClipboardList} title="Ricette">
             {recipes.length ? (
               recipes.map((recipe) => (
-                <p className="text-sm text-[#6c5f57]" key={String(recipe._id)}>
-                  {recipe.medicationName} · {recipe.recipeCode || "senza codice"}
-                </p>
+                <div
+                  className="rounded-md bg-[#fffaf6] px-3 py-2"
+                  key={String(recipe._id)}
+                >
+                  <p className="text-sm font-semibold text-[#4f5c55]">
+                    {recipe.medicationName} ·{" "}
+                    {recipe.recipeCode || "senza codice"}
+                  </p>
+                  {recipe.notes ? <ItemNote>{recipe.notes}</ItemNote> : null}
+                </div>
               ))
             ) : (
               <p className="text-sm text-[#6c5f57]">Nessuna ricetta.</p>
@@ -112,9 +131,18 @@ export default async function MemberPage(context: RouteContext) {
           <ProfilePanel icon={Pill} title="Farmaci">
             {medications.length ? (
               medications.map((medication) => (
-                <p className="text-sm text-[#6c5f57]" key={String(medication._id)}>
-                  {medication.name} · {medication.dosage || "dosaggio non impostato"}
-                </p>
+                <div
+                  className="rounded-md bg-[#fffaf6] px-3 py-2"
+                  key={String(medication._id)}
+                >
+                  <p className="text-sm font-semibold text-[#4f5c55]">
+                    {medication.name} ·{" "}
+                    {medication.dosage || "dosaggio non impostato"}
+                  </p>
+                  {medication.notes ? (
+                    <ItemNote>{medication.notes}</ItemNote>
+                  ) : null}
+                </div>
               ))
             ) : (
               <p className="text-sm text-[#6c5f57]">Nessun farmaco.</p>
@@ -124,9 +152,15 @@ export default async function MemberPage(context: RouteContext) {
           <ProfilePanel icon={FileText} title="Documenti">
             {documents.length ? (
               documents.map((document) => (
-                <p className="text-sm text-[#6c5f57]" key={String(document._id)}>
-                  {document.title} · {document.category}
-                </p>
+                <div
+                  className="rounded-md bg-[#fffaf6] px-3 py-2"
+                  key={String(document._id)}
+                >
+                  <p className="text-sm font-semibold text-[#4f5c55]">
+                    {document.title} · {document.category}
+                  </p>
+                  {document.notes ? <ItemNote>{document.notes}</ItemNote> : null}
+                </div>
               ))
             ) : (
               <p className="text-sm text-[#6c5f57]">Nessun documento.</p>
@@ -135,6 +169,14 @@ export default async function MemberPage(context: RouteContext) {
         </section>
       </div>
     </main>
+  );
+}
+
+function ItemNote({ children }: { children: React.ReactNode }) {
+  return (
+    <p className="mt-1 text-sm leading-6 text-[#6c5f57]">
+      <span className="font-semibold text-[#4f5c55]">Note:</span> {children}
+    </p>
   );
 }
 

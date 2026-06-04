@@ -9,6 +9,7 @@ import {
   ClipboardList,
   Clock3,
   CreditCard,
+  ExternalLink,
   FileText,
   Pill,
   Settings,
@@ -21,10 +22,14 @@ import { requireVerifiedUser } from "@/app/lib/auth";
 import { Visit } from "@/app/models/Visit";
 import { Recipe } from "@/app/models/Recipe";
 import { VisitForm } from "@/app/components/VisitForm";
-import { DeleteButton } from "@/app/components/DeleteButton";
 import { LogoutButton } from "@/app/components/LogoutButton";
 import { AddFamilyMemberForm } from "@/app/components/AddFamilyMemberForm";
-import { getFamilyMembers, memberSlug } from "@/app/lib/family";
+import { CancelVisitButton } from "@/app/components/CancelVisitButton";
+import {
+  getFamilyBookingSettings,
+  getFamilyMembers,
+  memberSlug,
+} from "@/app/lib/family";
 
 type DashboardVisit = {
   id: string;
@@ -70,6 +75,33 @@ type StoredRecipe = {
   renewalDate?: Date;
 };
 
+function visitDateTime(value: string, visitTime?: string) {
+  const date = new Date(value);
+  const [hours, minutes] = (visitTime ?? "").split(":").map(Number);
+
+  if (Number.isFinite(hours) && Number.isFinite(minutes)) {
+    date.setHours(hours, minutes, 0, 0);
+  } else {
+    date.setHours(23, 59, 59, 999);
+  }
+
+  return date;
+}
+
+function effectiveVisitStatus(
+  status: DashboardVisit["status"],
+  visitDate: string,
+  visitTime?: string
+): DashboardVisit["status"] {
+  if (status === "cancelled" || status === "completed") return status;
+
+  if (visitDateTime(visitDate, visitTime) < new Date()) {
+    return "completed";
+  }
+
+  return status;
+}
+
 const healthArchiveLinks = [
   {
     title: "Documenti",
@@ -101,21 +133,48 @@ async function getVisits(familyId: string): Promise<DashboardVisit[]> {
     const visits = await Visit.find({ familyId })
       .sort({ visitDate: 1 })
       .lean<StoredVisit[]>();
+    const completedVisitIds = visits
+      .filter((visit) => {
+        const status = visit.status ?? "booked";
 
-    return visits.map((visit) => ({
-      id: visit._id.toString(),
-      memberName: visit.memberName,
-      title: visit.title,
-      doctor: visit.doctor,
-      location: visit.location,
-      visitDate: visit.visitDate.toISOString(),
-      visitTime: visit.visitTime,
-      paymentDueDate: visit.paymentDueDate?.toISOString(),
-      cancellationDueDate: visit.cancellationDueDate?.toISOString(),
-      price: visit.price,
-      notes: visit.notes,
-      status: visit.status ?? "booked",
-    }));
+        return (
+          status !== "completed" &&
+          status !== "cancelled" &&
+          effectiveVisitStatus(
+            status,
+            visit.visitDate.toISOString(),
+            visit.visitTime
+          ) === "completed"
+        );
+      })
+      .map((visit) => visit._id);
+
+    if (completedVisitIds.length > 0) {
+      await Visit.updateMany(
+        { _id: { $in: completedVisitIds }, familyId },
+        { $set: { status: "completed" } }
+      );
+    }
+
+    return visits.map((visit) => {
+      const visitDate = visit.visitDate.toISOString();
+      const status = visit.status ?? "booked";
+
+      return {
+        id: visit._id.toString(),
+        memberName: visit.memberName,
+        title: visit.title,
+        doctor: visit.doctor,
+        location: visit.location,
+        visitDate,
+        visitTime: visit.visitTime,
+        paymentDueDate: visit.paymentDueDate?.toISOString(),
+        cancellationDueDate: visit.cancellationDueDate?.toISOString(),
+        price: visit.price,
+        notes: visit.notes,
+        status: effectiveVisitStatus(status, visitDate, visit.visitTime),
+      };
+    });
   } catch {
     return [];
   }
@@ -154,11 +213,22 @@ function statusLabel(status: DashboardVisit["status"]) {
   const labels = {
     booked: "Prenotata",
     paid: "Pagata",
-    cancelled: "Disdetta",
-    completed: "Completata",
+    cancelled: "Annullata",
+    completed: "Effettuata",
   };
 
   return labels[status];
+}
+
+function statusTone(status: DashboardVisit["status"]) {
+  const tones = {
+    booked: "bg-[#f7e2bf] text-[#7a5b2f]",
+    paid: "bg-[#d9eadf] text-[#315a45]",
+    cancelled: "bg-[#fff7f5] text-[#9f4d46]",
+    completed: "bg-[#d9eadf] text-[#315a45]",
+  };
+
+  return tones[status];
 }
 
 function groupVisitsByMember(
@@ -178,7 +248,7 @@ function buildSmartReminders(visits: DashboardVisit[], recipes: DashboardRecipe[
   const visitActions = visits.flatMap((visit) => {
     const actions = [];
 
-    if (visit.paymentDueDate && visit.status !== "paid") {
+    if (visit.paymentDueDate && visit.status === "booked") {
       actions.push({
         date: visit.paymentDueDate,
         title: "Pagamento visita",
@@ -220,14 +290,17 @@ function buildSmartReminders(visits: DashboardVisit[], recipes: DashboardRecipe[
 export default async function Home() {
   const user = await requireVerifiedUser();
   const members = await getFamilyMembers(user);
+  const bookingSettings = await getFamilyBookingSettings(user);
   const memberNames = members.map((member) => member.name);
   const visits = await getVisits(user.familyId);
   const recipes = await getRecipes(user.familyId);
   const visitGroups = groupVisitsByMember(visits, members);
   const smartReminders = buildSmartReminders(visits, recipes);
-  const paymentCount = visits.filter((visit) => visit.paymentDueDate).length;
+  const paymentCount = visits.filter(
+    (visit) => visit.status === "booked" && visit.paymentDueDate
+  ).length;
   const cancellationCount = visits.filter(
-    (visit) => visit.cancellationDueDate
+    (visit) => visit.status === "booked" && visit.cancellationDueDate
   ).length;
   const summaryCards = [
     {
@@ -383,6 +456,29 @@ export default async function Home() {
                     <Settings size={16} aria-hidden="true" />
                     Impostazioni
                   </Link>
+                  {bookingSettings.portalUrl ? (
+                    <a
+                      className="flex min-h-10 items-center gap-2 rounded-md border border-[#d5e0d8] bg-[#f6fbf7] px-3 py-2 text-sm font-semibold text-[#315a45] transition hover:bg-[#edf6ef]"
+                      href={bookingSettings.portalUrl}
+                      rel="noreferrer"
+                      target="_blank"
+                    >
+                      <ExternalLink
+                        className="shrink-0"
+                        size={16}
+                        aria-hidden="true"
+                      />
+                      <span className="min-w-0">
+                        <span className="block">Gestione prenotazioni</span>
+                        <span className="block truncate text-xs font-medium text-[#5e6b63]">
+                          {bookingSettings.portalName}
+                          {bookingSettings.region
+                            ? ` · ${bookingSettings.region}`
+                            : ""}
+                        </span>
+                      </span>
+                    </a>
+                  ) : null}
                   <LogoutButton className="flex h-10 w-full items-center gap-2 rounded-md border border-[#f1d8cf] bg-[#fff7f5] px-3 text-sm font-semibold text-[#9f4d46] transition hover:bg-[#fdece8]" />
                 </div>
               </div>
@@ -595,7 +691,11 @@ export default async function Home() {
                                 <h4 className="font-semibold text-[#29302d]">
                                   {visit.title}
                                 </h4>
-                                <span className="rounded-md bg-[#f7e2bf] px-2 py-1 text-xs font-semibold text-[#7a5b2f]">
+                                <span
+                                  className={`rounded-md px-2 py-1 text-xs font-semibold ${statusTone(
+                                    visit.status
+                                  )}`}
+                                >
                                   {statusLabel(visit.status)}
                                 </span>
                               </div>
@@ -603,6 +703,14 @@ export default async function Home() {
                                 {visit.doctor ? `${visit.doctor} - ` : ""}
                                 {visit.location ?? "Luogo non impostato"}
                               </p>
+                              {visit.notes ? (
+                                <p className="mt-2 rounded-md bg-[#fffaf6] px-3 py-2 text-sm leading-6 text-[#6c5f57]">
+                                  <span className="font-semibold text-[#4f5c55]">
+                                    Note:
+                                  </span>{" "}
+                                  {visit.notes}
+                                </p>
+                              ) : null}
                               <div className="mt-3 flex flex-wrap gap-2 text-xs text-[#6c5f57]">
                                 <span className="rounded-md bg-[#f6fbf7] px-2 py-1">
                                   Pagare: {formatDate(visit.paymentDueDate)}
@@ -632,10 +740,19 @@ export default async function Home() {
                                 visit={visit}
                                 familyMembers={memberNames}
                               />
-                              <DeleteButton
-                                endpoint={`/api/visits/${visit.id}`}
-                                label={visit.title}
-                              />
+                              {visit.status === "booked" ? (
+                                <CancelVisitButton
+                                  visitId={visit.id}
+                                  label={visit.title}
+                                />
+                              ) : null}
+                              {visit.status !== "booked" ? (
+                                <span className="flex h-9 items-center justify-center rounded-md border border-[#eee5dd] bg-[#fffdfb] px-3 text-sm font-semibold text-[#7a6f68]">
+                                  {visit.status === "cancelled"
+                                    ? "Nessun promemoria"
+                                    : "Storico"}
+                                </span>
+                              ) : null}
                             </div>
                           </div>
                         </article>

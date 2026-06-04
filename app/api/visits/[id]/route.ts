@@ -26,6 +26,27 @@ export async function PATCH(request: Request, context: RouteContext) {
   }
 
   const body = await request.json();
+  const status = body.status ? String(body.status) : "";
+  const allowedStatuses = ["booked", "paid", "cancelled", "completed"];
+
+  if (status && !allowedStatuses.includes(status)) {
+    return NextResponse.json({ error: "Invalid visit status" }, { status: 400 });
+  }
+
+  if (status && !body.title && !body.memberName && !body.visitDate) {
+    const visit = await Visit.findOneAndUpdate(
+      { _id: id, familyId: user.familyId },
+      { status },
+      { new: true, runValidators: true }
+    );
+
+    if (!visit) {
+      return NextResponse.json({ error: "Visit not found" }, { status: 404 });
+    }
+
+    return NextResponse.json(visit);
+  }
+
   const title = String(body.title ?? "").trim();
   const memberName = String(body.memberName ?? "").trim();
 

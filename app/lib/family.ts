@@ -8,7 +8,18 @@ export type FamilyMember = {
   tone: string;
 };
 
+export type FamilyBookingSettings = {
+  region: string;
+  portalName: string;
+  portalUrl: string;
+};
+
 const tones = ["bg-[#f9d8d6]", "bg-[#d9eadf]", "bg-[#dbe7fb]", "bg-[#f7e2bf]"];
+const pugliaBookingSettings: FamilyBookingSettings = {
+  region: "Puglia",
+  portalName: "Puglia Salute",
+  portalUrl: "https://www.sanita.puglia.it/web/guest/servizi-di-prenotazione",
+};
 
 export const addanteMembers: FamilyMember[] = [
   { name: "Rossana Addante", role: "Utente principale", tone: tones[0] },
@@ -22,6 +33,9 @@ type StoredFamily = {
     name?: string;
     role?: string;
   }>;
+  bookingRegion?: string;
+  bookingPortalName?: string;
+  bookingPortalUrl?: string;
 };
 
 export async function getFamilyMembers(user: CurrentUser): Promise<FamilyMember[]> {
@@ -48,4 +62,40 @@ export async function getFamilyMembers(user: CurrentUser): Promise<FamilyMember[
 
 export function memberSlug(name: string) {
   return name.toLowerCase().replaceAll(" ", "-");
+}
+
+export async function getFamilyBookingSettings(
+  user: CurrentUser
+): Promise<FamilyBookingSettings> {
+  await connectMongo();
+
+  const family = await mongoose.connection
+    .collection("families")
+    .findOne<StoredFamily>({ key: user.familyId });
+
+  const storedSettings = {
+    region: String(family?.bookingRegion ?? "").trim(),
+    portalName: String(family?.bookingPortalName ?? "").trim(),
+    portalUrl: String(family?.bookingPortalUrl ?? "").trim(),
+  };
+
+  if (
+    storedSettings.region ||
+    storedSettings.portalName ||
+    storedSettings.portalUrl
+  ) {
+    return {
+      region: storedSettings.region,
+      portalName: storedSettings.portalName || "Portale prenotazioni",
+      portalUrl: storedSettings.portalUrl,
+    };
+  }
+
+  if (user.familyId === "famiglia-addante") return pugliaBookingSettings;
+
+  return {
+    region: "",
+    portalName: "Portale prenotazioni",
+    portalUrl: "",
+  };
 }

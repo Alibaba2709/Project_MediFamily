@@ -13,6 +13,9 @@ const FamilySchema = new Schema(
     key: { type: String, required: true, unique: true },
     name: { type: String, required: true },
     members: { type: [FamilyMemberSchema], default: [] },
+    bookingRegion: { type: String },
+    bookingPortalName: { type: String },
+    bookingPortalUrl: { type: String },
   },
   { timestamps: true }
 );
