@@ -37,7 +37,7 @@ async function getPaymentData(familyId: string) {
     const [visits, receipts] = await Promise.all([
       Visit.find({
         familyId,
-        status: { $in: ["booked", "paid"] },
+        status: { $in: ["booked", "paid", "completed"] },
       })
         .sort({ visitDate: 1, visitTime: 1 })
         .lean<StoredVisit[]>(),
@@ -142,7 +142,7 @@ export default async function PaymentsPage() {
 
         {visits.length === 0 ? (
           <section className="rounded-lg border border-dashed border-[#d9cfc6] bg-white p-4 text-sm text-[#6c5f57] shadow-sm">
-            Non ci sono visite prenotate o pagate a cui allegare una ricevuta.
+            Non ci sono visite a cui allegare una ricevuta.
           </section>
         ) : null}
 
@@ -219,7 +219,7 @@ export default async function PaymentsPage() {
               Nessuna ricevuta allegata
             </h2>
             <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-[#6c5f57]">
-              Premi Ricevuta per collegare il pagamento a una visita prenotata.
+              Premi Ricevuta per collegare il pagamento a una visita.
             </p>
           </section>
         )}

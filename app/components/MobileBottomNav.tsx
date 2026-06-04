@@ -5,7 +5,7 @@ import { getCurrentUser } from "@/app/lib/auth";
 const navItems = [
   { href: "/", label: "Home", icon: Home },
   { href: "/reminders", label: "Promemoria", icon: Bell },
-  { href: "/documents", label: "Archivio", icon: FileText },
+  { href: "/archive", label: "Archivio", icon: FileText },
   { href: "/settings", label: "Famiglia", icon: Users },
 ];
 

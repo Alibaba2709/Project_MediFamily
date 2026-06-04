@@ -2,7 +2,14 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Bell, CalendarDays, ClipboardList, CreditCard, FileText } from "lucide-react";
+import {
+  Bell,
+  CalendarDays,
+  ClipboardList,
+  CreditCard,
+  FileText,
+  Pill,
+} from "lucide-react";
 
 export type ReminderViewItem = {
   date: string;
@@ -11,7 +18,13 @@ export type ReminderViewItem = {
   memberName: string;
   title: string;
   tone: string;
-  type: "visit" | "payment" | "cancellation" | "recipe" | "document";
+  type:
+    | "visit"
+    | "payment"
+    | "cancellation"
+    | "recipe"
+    | "document"
+    | "medication";
 };
 
 type ReminderFiltersProps = {
@@ -26,6 +39,7 @@ const typeLabels = {
   cancellation: "Disdette",
   recipe: "Ricette",
   document: "Documenti",
+  medication: "Farmaci",
 };
 
 const icons = {
@@ -34,6 +48,7 @@ const icons = {
   cancellation: Bell,
   recipe: ClipboardList,
   document: FileText,
+  medication: Pill,
 };
 
 function formatDate(value?: string) {

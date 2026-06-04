@@ -43,12 +43,12 @@ export async function POST(request: Request) {
   const visit = await Visit.findOne({
     _id: visitId,
     familyId: user.familyId,
-    status: { $in: ["booked", "paid"] },
+    status: { $in: ["booked", "paid", "completed"] },
   });
 
   if (!visit) {
     return NextResponse.json(
-      { error: "Visita prenotata non trovata." },
+      { error: "Visita non trovata." },
       { status: 404 }
     );
   }

@@ -5,6 +5,7 @@ import { requireVerifiedUser } from "@/app/lib/auth";
 import { getFamilyMembers } from "@/app/lib/family";
 import { Visit } from "@/app/models/Visit";
 import { Recipe } from "@/app/models/Recipe";
+import { Medication } from "@/app/models/Medication";
 import { HealthDocument } from "@/app/models/HealthDocument";
 import { ReminderFilters } from "@/app/components/ReminderFilters";
 import type { ReminderViewItem } from "@/app/components/ReminderFilters";
@@ -25,6 +26,15 @@ type StoredRecipe = {
   memberName: string;
   medicationName: string;
   renewalDate?: Date;
+};
+
+type StoredMedication = {
+  _id: { toString: () => string };
+  memberName: string;
+  name: string;
+  dosage?: string;
+  schedule?: string;
+  active: boolean;
 };
 
 type StoredDocument = {
@@ -59,9 +69,12 @@ function withinNextDays(value: string, days: number) {
 async function getReminders(familyId: string): Promise<ReminderViewItem[]> {
   await connectMongo();
 
-  const [visits, recipes, documents] = await Promise.all([
+  const [visits, recipes, medications, documents] = await Promise.all([
     Visit.find({ familyId }).sort({ visitDate: 1 }).lean<StoredVisit[]>(),
     Recipe.find({ familyId }).sort({ renewalDate: 1 }).lean<StoredRecipe[]>(),
+    Medication.find({ familyId, active: true })
+      .sort({ memberName: 1, name: 1 })
+      .lean<StoredMedication[]>(),
     HealthDocument.find({ familyId }).select("visitId").lean<StoredDocument[]>(),
   ]);
   const linkedVisitIds = new Set(
@@ -152,9 +165,21 @@ async function getReminders(familyId: string): Promise<ReminderViewItem[]> {
       };
     });
 
+  const medicationReminders = medications.map((medication) => ({
+    date: new Date().toISOString(),
+    detail: `${medication.memberName} · ${medication.name}${
+      medication.dosage ? ` · ${medication.dosage}` : ""
+    }${medication.schedule ? ` · ${medication.schedule}` : ""}`,
+    href: "/medications",
+    memberName: medication.memberName,
+    title: "Farmaco attivo",
+    tone: "border-[#d5e0d8] bg-[#f6fbf7] text-[#315a45]",
+    type: "medication" as const,
+  }));
+
   const today = startOfDay(new Date());
 
-  return [...visitReminders, ...recipeReminders]
+  return [...visitReminders, ...recipeReminders, ...medicationReminders]
     .filter((reminder) => new Date(reminder.date) >= today)
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 }
