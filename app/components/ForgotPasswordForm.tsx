@@ -7,12 +7,12 @@ import { KeyRound, Loader2 } from "lucide-react";
 export function ForgotPasswordForm() {
   const [isSaving, setIsSaving] = useState(false);
   const [message, setMessage] = useState("");
-  const [resetLink, setResetLink] = useState("");
+  const [error, setError] = useState("");
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setMessage("");
-    setResetLink("");
+    setError("");
     setIsSaving(true);
 
     const formData = new FormData(event.currentTarget);
@@ -24,8 +24,13 @@ export function ForgotPasswordForm() {
     const result = await response.json();
 
     setIsSaving(false);
+
+    if (!response.ok) {
+      setError(result.error ?? "Invio email non riuscito.");
+      return;
+    }
+
     setMessage(result.message ?? "Controlla la tua email.");
-    setResetLink(result.resetLink ?? "");
   }
 
   return (
@@ -51,15 +56,13 @@ export function ForgotPasswordForm() {
       {message ? (
         <div className="rounded-md border border-[#d5e0d8] bg-[#f6fbf7] p-3 text-sm text-[#315a45]">
           <p className="font-semibold">{message}</p>
-          {resetLink ? (
-            <>
-              <p className="mt-1">In sviluppo clicca questo link:</p>
-              <Link className="mt-2 block break-all underline" href={resetLink}>
-                {resetLink}
-              </Link>
-            </>
-          ) : null}
         </div>
+      ) : null}
+
+      {error ? (
+        <p className="rounded-md bg-[#fff7f5] px-3 py-2 text-sm font-medium text-[#9f4d46]">
+          {error}
+        </p>
       ) : null}
 
       <button

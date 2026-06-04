@@ -1,19 +1,19 @@
 "use client";
 
-import Link from "next/link";
 import { FormEvent, useState } from "react";
+import Link from "next/link";
 import { Loader2, UserPlus } from "lucide-react";
 import { PasswordField } from "@/app/components/PasswordField";
 
 export function RegisterForm() {
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState("");
-  const [verificationLink, setVerificationLink] = useState("");
+  const [success, setSuccess] = useState("");
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError("");
-    setVerificationLink("");
+    setSuccess("");
     setIsSaving(true);
 
     const formData = new FormData(event.currentTarget);
@@ -33,7 +33,7 @@ export function RegisterForm() {
       return;
     }
 
-    setVerificationLink(result.verificationLink);
+    setSuccess(result.message ?? "Account creato. Controlla la tua email.");
   }
 
   return (
@@ -97,14 +97,12 @@ export function RegisterForm() {
         </p>
       ) : null}
 
-      {verificationLink ? (
+      {success ? (
         <div className="rounded-md border border-[#d5e0d8] bg-[#f6fbf7] p-3 text-sm text-[#315a45]">
           <p className="font-semibold">Account creato.</p>
-          <p className="mt-1">
-            In sviluppo clicca questo link per verificare l&apos;email:
-          </p>
-          <Link className="mt-2 block break-all underline" href={verificationLink}>
-            {verificationLink}
+          <p className="mt-1">{success}</p>
+          <Link className="mt-2 block font-semibold underline" href="/auth/login">
+            Vai al login
           </Link>
         </div>
       ) : null}

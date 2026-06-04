@@ -6,6 +6,7 @@ import {
   hashToken,
   normalizeEmail,
 } from "@/app/lib/auth";
+import { resetPasswordEmail, sendEmail } from "@/app/lib/email";
 import { User } from "@/app/models/User";
 
 export async function POST(request: Request) {
@@ -22,11 +23,18 @@ export async function POST(request: Request) {
     user.passwordResetExpiresAt = new Date(Date.now() + 60 * 60 * 1000);
     await user.save();
     resetLink = buildAppUrl(`/auth/reset-password?token=${token}`, request);
+    const emailResult = await sendEmail({
+      to: email,
+      ...resetPasswordEmail(resetLink),
+    });
+
+    if (!emailResult.ok) {
+      return NextResponse.json({ error: emailResult.error }, { status: 500 });
+    }
   }
 
   return NextResponse.json({
     message:
       "Se l'email esiste, riceverai un link per impostare una nuova password.",
-    resetLink,
   });
 }

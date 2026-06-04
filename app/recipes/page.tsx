@@ -76,6 +76,7 @@ function groupRecipesByMember(
 
 export default async function RecipesPage() {
   const user = await requireVerifiedUser();
+  const canEdit = user.role !== "viewer";
   const members = await getFamilyMembers(user);
   const memberNames = members.map((member) => member.name);
   const recipes = await getRecipes(user.familyId);
@@ -92,7 +93,7 @@ export default async function RecipesPage() {
             <ArrowLeft size={17} aria-hidden="true" />
             Dashboard
           </Link>
-          <RecipeForm familyMembers={memberNames} />
+          {canEdit ? <RecipeForm familyMembers={memberNames} /> : null}
         </div>
 
         <section className="rounded-lg border border-[#eadfd7] bg-white p-5 shadow-sm">
@@ -171,15 +172,19 @@ export default async function RecipesPage() {
                         </p>
                       ) : null}
                       <div className="mt-4 flex flex-wrap gap-2">
-                        <RecipeForm
-                          mode="edit"
-                          recipe={recipe}
-                          familyMembers={memberNames}
-                        />
-                        <DeleteButton
-                          endpoint={`/api/recipes/${recipe.id}`}
-                          label={recipe.medicationName}
-                        />
+                        {canEdit ? (
+                          <>
+                            <RecipeForm
+                              mode="edit"
+                              recipe={recipe}
+                              familyMembers={memberNames}
+                            />
+                            <DeleteButton
+                              endpoint={`/api/recipes/${recipe.id}`}
+                              label={recipe.medicationName}
+                            />
+                          </>
+                        ) : null}
                       </div>
                     </article>
                   ))}

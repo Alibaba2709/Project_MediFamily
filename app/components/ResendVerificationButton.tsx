@@ -1,17 +1,16 @@
 "use client";
 
-import Link from "next/link";
 import { useState } from "react";
 import { Loader2, Mail } from "lucide-react";
 
 export function ResendVerificationButton() {
   const [isSending, setIsSending] = useState(false);
-  const [verificationLink, setVerificationLink] = useState("");
+  const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
   async function resend() {
     setIsSending(true);
-    setVerificationLink("");
+    setMessage("");
     setError("");
 
     const response = await fetch("/api/auth/resend-verification", {
@@ -26,7 +25,7 @@ export function ResendVerificationButton() {
       return;
     }
 
-    setVerificationLink(result.verificationLink);
+    setMessage(result.message ?? "Email inviata.");
   }
 
   return (
@@ -47,12 +46,9 @@ export function ResendVerificationButton() {
         </p>
       ) : null}
 
-      {verificationLink ? (
+      {message ? (
         <div className="rounded-md border border-[#d5e0d8] bg-[#f6fbf7] p-3 text-sm text-[#315a45]">
-          <p className="font-semibold">Link creato.</p>
-          <Link className="mt-2 block break-all underline" href={verificationLink}>
-            {verificationLink}
-          </Link>
+          <p className="font-semibold">{message}</p>
         </div>
       ) : null}
     </div>

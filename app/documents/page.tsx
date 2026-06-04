@@ -104,6 +104,7 @@ function formatCurrency(value?: number) {
 
 export default async function DocumentsPage() {
   const user = await requireVerifiedUser();
+  const canEdit = user.role !== "viewer";
   const members = await getFamilyMembers(user);
   const memberNames = members.map((member) => member.name);
   const documents = await getDocuments(user.familyId);
@@ -121,7 +122,9 @@ export default async function DocumentsPage() {
             <ArrowLeft size={17} aria-hidden="true" />
             Dashboard
           </Link>
-          <DocumentForm familyMembers={memberNames} visits={visits} />
+          {canEdit ? (
+            <DocumentForm familyMembers={memberNames} visits={visits} />
+          ) : null}
         </div>
 
         <section className="rounded-lg border border-[#eadfd7] bg-white p-5 shadow-sm">
@@ -185,12 +188,14 @@ export default async function DocumentsPage() {
                     ) : null}
                   </div>
                   <div className="flex flex-wrap gap-2 sm:justify-end">
-                    <DocumentForm
-                      mode="edit"
-                      document={document}
-                      familyMembers={memberNames}
-                      visits={visits}
-                    />
+                    {canEdit ? (
+                      <DocumentForm
+                        mode="edit"
+                        document={document}
+                        familyMembers={memberNames}
+                        visits={visits}
+                      />
+                    ) : null}
                     {document.fileName ? (
                       <a
                         className="flex h-9 items-center justify-center gap-2 rounded-md border border-[#d5e0d8] bg-[#f6fbf7] px-3 text-sm font-semibold text-[#315a45] transition hover:bg-[#edf6ef]"
@@ -200,10 +205,12 @@ export default async function DocumentsPage() {
                         Scarica
                       </a>
                     ) : null}
-                    <DeleteButton
-                      endpoint={`/api/documents/${document.id}`}
-                      label={document.title}
-                    />
+                    {canEdit ? (
+                      <DeleteButton
+                        endpoint={`/api/documents/${document.id}`}
+                        label={document.title}
+                      />
+                    ) : null}
                   </div>
                 </div>
               </article>

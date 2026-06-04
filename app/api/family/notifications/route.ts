@@ -4,20 +4,6 @@ import { getCurrentUser } from "@/app/lib/auth";
 import { connectMongo } from "@/app/lib/mongodb";
 import { canManageFamily, forbidden } from "@/app/lib/permissions";
 
-function normalizeUrl(value: string) {
-  const trimmed = value.trim();
-  if (!trimmed) return "";
-
-  try {
-    const url = new URL(trimmed);
-    if (url.protocol !== "https:" && url.protocol !== "http:") return null;
-
-    return url.toString();
-  } catch {
-    return null;
-  }
-}
-
 export async function PATCH(request: Request) {
   const user = await getCurrentUser();
 
@@ -28,17 +14,15 @@ export async function PATCH(request: Request) {
   if (!canManageFamily(user)) return forbidden();
 
   const body = await request.json();
-  const bookingRegion = String(body.bookingRegion ?? "").trim();
-  const bookingPortalName =
-    String(body.bookingPortalName ?? "").trim() || "Portale prenotazioni";
-  const bookingPortalUrl = normalizeUrl(String(body.bookingPortalUrl ?? ""));
-
-  if (bookingPortalUrl === null) {
-    return NextResponse.json(
-      { error: "Inserisci un link valido, ad esempio https://..." },
-      { status: 400 }
-    );
-  }
+  const notificationSettings = {
+    emailEnabled: Boolean(body.emailEnabled),
+    visitDaysBefore: Math.max(0, Number(body.visitDaysBefore ?? 1)),
+    recipeDaysBefore: Math.max(0, Number(body.recipeDaysBefore ?? 7)),
+    paymentEnabled: Boolean(body.paymentEnabled),
+    cancellationEnabled: Boolean(body.cancellationEnabled),
+    recipeEnabled: Boolean(body.recipeEnabled),
+    documentEnabled: Boolean(body.documentEnabled),
+  };
 
   await connectMongo();
 
@@ -51,18 +35,12 @@ export async function PATCH(request: Request) {
         createdAt: new Date(),
       },
       $set: {
-        bookingRegion,
-        bookingPortalName,
-        bookingPortalUrl,
+        notificationSettings,
         updatedAt: new Date(),
       },
     },
     { upsert: true }
   );
 
-  return NextResponse.json({
-    bookingRegion,
-    bookingPortalName,
-    bookingPortalUrl,
-  });
+  return NextResponse.json({ notificationSettings });
 }

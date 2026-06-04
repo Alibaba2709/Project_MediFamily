@@ -1,17 +1,13 @@
 import Link from "next/link";
-import {
-  ArrowLeft,
-  Bell,
-  CalendarDays,
-  ClipboardList,
-  CreditCard,
-  FileText,
-} from "lucide-react";
+import { ArrowLeft, Bell } from "lucide-react";
 import { connectMongo } from "@/app/lib/mongodb";
 import { requireVerifiedUser } from "@/app/lib/auth";
+import { getFamilyMembers } from "@/app/lib/family";
 import { Visit } from "@/app/models/Visit";
 import { Recipe } from "@/app/models/Recipe";
 import { HealthDocument } from "@/app/models/HealthDocument";
+import { ReminderFilters } from "@/app/components/ReminderFilters";
+import type { ReminderViewItem } from "@/app/components/ReminderFilters";
 
 type StoredVisit = {
   _id: { toString: () => string };
@@ -33,15 +29,6 @@ type StoredRecipe = {
 
 type StoredDocument = {
   visitId?: string;
-};
-
-type ReminderItem = {
-  date: string;
-  detail: string;
-  href: string;
-  icon: typeof Bell;
-  title: string;
-  tone: string;
 };
 
 function formatDate(value?: string) {
@@ -69,7 +56,7 @@ function withinNextDays(value: string, days: number) {
   return date >= today && date <= limit;
 }
 
-async function getReminders(familyId: string): Promise<ReminderItem[]> {
+async function getReminders(familyId: string): Promise<ReminderViewItem[]> {
   await connectMongo();
 
   const [visits, recipes, documents] = await Promise.all([
@@ -86,7 +73,7 @@ async function getReminders(familyId: string): Promise<ReminderItem[]> {
     if (status !== "booked") return [];
 
     const visitDate = visit.visitDate.toISOString();
-    const items: ReminderItem[] = [];
+    const items: ReminderViewItem[] = [];
 
     if (withinNextDays(visitDate, 3)) {
       items.push({
@@ -95,9 +82,10 @@ async function getReminders(familyId: string): Promise<ReminderItem[]> {
           visit.visitTime ? ` · ${visit.visitTime}` : ""
         }`,
         href: "/calendar",
-        icon: CalendarDays,
+        memberName: visit.memberName,
         title: "Visita imminente",
         tone: "border-[#d5e0d8] bg-[#f6fbf7] text-[#315a45]",
+        type: "visit",
       });
     }
 
@@ -109,9 +97,10 @@ async function getReminders(familyId: string): Promise<ReminderItem[]> {
           paymentDate
         )}`,
         href: "/payments",
-        icon: CreditCard,
+        memberName: visit.memberName,
         title: "Pagamento visita",
         tone: "border-[#f1d8cf] bg-[#fff7f5] text-[#7f5146]",
+        type: "payment",
       });
     }
 
@@ -123,9 +112,10 @@ async function getReminders(familyId: string): Promise<ReminderItem[]> {
           cancellationDate
         )}`,
         href: "/calendar",
-        icon: Bell,
+        memberName: visit.memberName,
         title: "Termine disdetta",
         tone: "border-[#f0d3a6] bg-[#fff8e9] text-[#7a5b2f]",
+        type: "cancellation",
       });
     }
 
@@ -134,9 +124,10 @@ async function getReminders(familyId: string): Promise<ReminderItem[]> {
         date: visitDate,
         detail: `${visit.memberName} · ${visit.title} · controlla ricetta o referti`,
         href: "/documents",
-        icon: FileText,
+        memberName: visit.memberName,
         title: "Documenti da collegare",
         tone: "border-[#dbe7fb] bg-[#f7faff] text-[#375479]",
+        type: "document",
       });
     }
 
@@ -154,9 +145,10 @@ async function getReminders(familyId: string): Promise<ReminderItem[]> {
           renewalDate
         )}`,
         href: "/recipes",
-        icon: ClipboardList,
+        memberName: recipe.memberName,
         title: "Rinnovo ricetta",
         tone: "border-[#d7d0ec] bg-[#faf7ff] text-[#5d527b]",
+        type: "recipe" as const,
       };
     });
 
@@ -169,6 +161,7 @@ async function getReminders(familyId: string): Promise<ReminderItem[]> {
 
 export default async function RemindersPage() {
   const user = await requireVerifiedUser();
+  const members = await getFamilyMembers(user);
   const reminders = await getReminders(user.familyId);
 
   return (
@@ -202,51 +195,10 @@ export default async function RemindersPage() {
           </div>
         </section>
 
-        {reminders.length > 0 ? (
-          <section className="grid gap-3">
-            {reminders.map((reminder) => {
-              const Icon = reminder.icon;
-
-              return (
-                <Link
-                  className={`rounded-lg border p-4 shadow-sm transition hover:bg-white ${reminder.tone}`}
-                  href={reminder.href}
-                  key={`${reminder.title}-${reminder.detail}-${reminder.date}`}
-                >
-                  <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
-                    <div className="flex items-start gap-3">
-                      <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-white/75">
-                        <Icon size={18} aria-hidden="true" />
-                      </div>
-                      <div>
-                        <h2 className="font-semibold text-[#29302d]">
-                          {reminder.title}
-                        </h2>
-                        <p className="mt-1 text-sm leading-6 text-[#6c5f57]">
-                          {reminder.detail}
-                        </p>
-                      </div>
-                    </div>
-                    <span className="text-sm font-semibold text-[#4f5c55]">
-                      {formatDate(reminder.date)}
-                    </span>
-                  </div>
-                </Link>
-              );
-            })}
-          </section>
-        ) : (
-          <section className="rounded-lg border border-dashed border-[#d9cfc6] bg-white p-6 text-center shadow-sm">
-            <Bell size={28} className="mx-auto text-[#947b6a]" aria-hidden="true" />
-            <h2 className="mt-3 text-base font-semibold text-[#29302d]">
-              Nessun promemoria attivo
-            </h2>
-            <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-[#6c5f57]">
-              Quando ci saranno visite, ricette o scadenze da seguire,
-              compariranno qui.
-            </p>
-          </section>
-        )}
+        <ReminderFilters
+          members={members.map((member) => member.name)}
+          reminders={reminders}
+        />
       </div>
     </main>
   );

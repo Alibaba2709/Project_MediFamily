@@ -20,8 +20,8 @@ export default async function VerifyEmailSentPage() {
             {user.email}
           </h2>
           <p className="mt-3 text-sm leading-6 text-[#6c5f57]">
-            In produzione qui invieremo una vera email. In sviluppo puoi usare
-            il pulsante sotto per generare il link.
+            Ti abbiamo inviato una email reale di verifica. Se non la trovi,
+            controlla spam/promozioni oppure reinviala dal pulsante sotto.
           </p>
         </div>
 

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import mongoose from "mongoose";
 import { connectMongo } from "@/app/lib/mongodb";
 import { getCurrentUser } from "@/app/lib/auth";
+import { canEditHealth, forbidden } from "@/app/lib/permissions";
 import { HealthDocument } from "@/app/models/HealthDocument";
 import { Visit } from "@/app/models/Visit";
 
@@ -13,6 +14,8 @@ export async function POST(request: Request) {
   if (!user?.emailVerifiedAt) {
     return NextResponse.json({ error: "Non autorizzata." }, { status: 401 });
   }
+
+  if (!canEditHealth(user)) return forbidden();
 
   const body = await request.json();
   const visitId = String(body.visitId ?? "").trim();

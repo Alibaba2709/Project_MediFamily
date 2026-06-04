@@ -3,6 +3,7 @@ import mongoose from "mongoose";
 import { getCurrentUser } from "@/app/lib/auth";
 import { connectMongo } from "@/app/lib/mongodb";
 import { addanteMembers, getFamilyMembers } from "@/app/lib/family";
+import { canManageFamily, forbidden } from "@/app/lib/permissions";
 
 const FREE_MEMBER_LIMIT = 6;
 
@@ -12,6 +13,8 @@ export async function POST(request: Request) {
   if (!user?.emailVerifiedAt) {
     return NextResponse.json({ error: "Non autorizzata." }, { status: 401 });
   }
+
+  if (!canManageFamily(user)) return forbidden();
 
   await connectMongo();
 

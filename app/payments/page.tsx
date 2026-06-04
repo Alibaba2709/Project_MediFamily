@@ -102,6 +102,7 @@ function formatCurrency(value?: number) {
 
 export default async function PaymentsPage() {
   const user = await requireVerifiedUser();
+  const canEdit = user.role !== "viewer";
   const { receipts, visits } = await getPaymentData(user.familyId);
   const visitsById = new Map(visits.map((visit) => [visit.id, visit]));
 
@@ -116,7 +117,7 @@ export default async function PaymentsPage() {
             <ArrowLeft size={17} aria-hidden="true" />
             Dashboard
           </Link>
-          <PaymentReceiptForm visits={visits} />
+          {canEdit ? <PaymentReceiptForm visits={visits} /> : null}
         </div>
 
         <section className="rounded-lg border border-[#eadfd7] bg-white p-5 shadow-sm">
@@ -195,10 +196,12 @@ export default async function PaymentsPage() {
                           Scarica
                         </a>
                       ) : null}
-                      <DeleteButton
-                        endpoint={`/api/documents/${receipt.id}`}
-                        label={receipt.title}
-                      />
+                      {canEdit ? (
+                        <DeleteButton
+                          endpoint={`/api/documents/${receipt.id}`}
+                          label={receipt.title}
+                        />
+                      ) : null}
                     </div>
                   </div>
                 </article>

@@ -68,6 +68,7 @@ function groupMedicationsByMember(
 
 export default async function MedicationsPage() {
   const user = await requireVerifiedUser();
+  const canEdit = user.role !== "viewer";
   const members = await getFamilyMembers(user);
   const memberNames = members.map((member) => member.name);
   const medications = await getMedications(user.familyId);
@@ -84,7 +85,7 @@ export default async function MedicationsPage() {
             <ArrowLeft size={17} aria-hidden="true" />
             Dashboard
           </Link>
-          <MedicationForm familyMembers={memberNames} />
+          {canEdit ? <MedicationForm familyMembers={memberNames} /> : null}
         </div>
 
         <section className="rounded-lg border border-[#eadfd7] bg-white p-5 shadow-sm">
@@ -163,15 +164,19 @@ export default async function MedicationsPage() {
                         </p>
                       ) : null}
                       <div className="mt-4 flex flex-wrap gap-2">
-                        <MedicationForm
-                          mode="edit"
-                          medication={medication}
-                          familyMembers={memberNames}
-                        />
-                        <DeleteButton
-                          endpoint={`/api/medications/${medication.id}`}
-                          label={medication.name}
-                        />
+                        {canEdit ? (
+                          <>
+                            <MedicationForm
+                              mode="edit"
+                              medication={medication}
+                              familyMembers={memberNames}
+                            />
+                            <DeleteButton
+                              endpoint={`/api/medications/${medication.id}`}
+                              label={medication.name}
+                            />
+                          </>
+                        ) : null}
                       </div>
                     </article>
                   ))}

@@ -6,6 +6,7 @@ import {
   getCurrentUser,
   hashToken,
 } from "@/app/lib/auth";
+import { sendEmail, verificationEmail } from "@/app/lib/email";
 import { User } from "@/app/models/User";
 
 export async function POST(request: Request) {
@@ -26,7 +27,17 @@ export async function POST(request: Request) {
     }
   );
 
+  const verificationLink = buildAppUrl(`/verify-email?token=${token}`, request);
+  const emailResult = await sendEmail({
+    to: currentUser.email,
+    ...verificationEmail(verificationLink),
+  });
+
+  if (!emailResult.ok) {
+    return NextResponse.json({ error: emailResult.error }, { status: 500 });
+  }
+
   return NextResponse.json({
-    verificationLink: buildAppUrl(`/verify-email?token=${token}`, request),
+    message: "Email di verifica inviata.",
   });
 }

@@ -3,6 +3,7 @@ import mongoose from "mongoose";
 import { getCurrentUser } from "@/app/lib/auth";
 import { connectMongo } from "@/app/lib/mongodb";
 import { addanteMembers, getFamilyMembers } from "@/app/lib/family";
+import { canManageFamily, forbidden } from "@/app/lib/permissions";
 
 type RouteContext = {
   params: Promise<{
@@ -16,6 +17,8 @@ export async function DELETE(_request: Request, context: RouteContext) {
   if (!user?.emailVerifiedAt) {
     return NextResponse.json({ error: "Non autorizzata." }, { status: 401 });
   }
+
+  if (!canManageFamily(user)) return forbidden();
 
   await connectMongo();
 

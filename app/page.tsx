@@ -556,6 +556,7 @@ function buildSearchItems(
 
 export default async function Home() {
   const user = await requireVerifiedUser();
+  const canEdit = user.role !== "viewer";
   const members = await getFamilyMembers(user);
   const bookingSettings = await getFamilyBookingSettings(user);
   const memberNames = members.map((member) => member.name);
@@ -563,6 +564,14 @@ export default async function Home() {
   const recipes = await getRecipes(user.familyId);
   const medications = await getMedications(user.familyId);
   const documents = await getDocuments(user.familyId);
+  const documentsByVisitId = new Map<string, DashboardDocument[]>();
+  documents.forEach((document) => {
+    if (!document.visitId) return;
+    documentsByVisitId.set(document.visitId, [
+      ...(documentsByVisitId.get(document.visitId) ?? []),
+      document,
+    ]);
+  });
   const visitGroups = groupVisitsByMember(visits, members);
   const urgencyItems = buildUrgencyItems(visits, recipes, medications);
   const searchItems = buildSearchItems(
@@ -656,7 +665,7 @@ export default async function Home() {
               <Bell size={17} aria-hidden="true" />
               <span className="hidden min-[390px]:inline">Promemoria</span>
             </Link>
-            <VisitForm familyMembers={memberNames} />
+            {canEdit ? <VisitForm familyMembers={memberNames} /> : null}
           </div>
         </div>
       </header>
@@ -963,6 +972,21 @@ export default async function Home() {
                     {group.visits.length > 0 ? (
                       <div className="grid gap-3">
                         {group.visits.map((visit) => (
+                        (() => {
+                          const linkedDocuments =
+                            documentsByVisitId.get(visit.id) ?? [];
+                          const hasReceipt = linkedDocuments.some(
+                            (document) => document.category === "pagamento"
+                          );
+                          const hasClinicalDocuments = linkedDocuments.some(
+                            (document) => document.category !== "pagamento"
+                          );
+                          const needsDocuments =
+                            visit.status === "booked" &&
+                            isWithinDays(visit.visitDate, 7) &&
+                            linkedDocuments.length === 0;
+
+                          return (
                         <article
                           className="grid gap-3 rounded-lg border border-[#eee5dd] bg-white p-3 sm:gap-4 sm:p-4 md:grid-cols-[1fr_auto]"
                           key={visit.id}
@@ -996,6 +1020,23 @@ export default async function Home() {
                                   {visit.notes}
                                 </p>
                               ) : null}
+                              <div className="mt-2 flex flex-wrap gap-2 text-xs font-semibold">
+                                {hasReceipt ? (
+                                  <span className="rounded-md bg-[#fff7f5] px-2 py-1 text-[#7f5146]">
+                                    Ricevuta presente
+                                  </span>
+                                ) : null}
+                                {hasClinicalDocuments ? (
+                                  <span className="rounded-md bg-[#f7faff] px-2 py-1 text-[#375479]">
+                                    Documenti collegati
+                                  </span>
+                                ) : null}
+                                {needsDocuments ? (
+                                  <span className="rounded-md bg-[#fff8e9] px-2 py-1 text-[#7a5b2f]">
+                                    Documenti mancanti
+                                  </span>
+                                ) : null}
+                              </div>
                               <div className="mt-3 flex flex-wrap gap-2 text-xs text-[#6c5f57]">
                                 <span className="rounded-md bg-[#f6fbf7] px-2 py-1">
                                   Pagare: {formatDate(visit.paymentDueDate)}
@@ -1020,12 +1061,14 @@ export default async function Home() {
                               {visit.visitTime ? ` · ${visit.visitTime}` : ""}
                             </div>
                             <div className="flex flex-wrap gap-2 md:justify-end">
-                              <VisitForm
-                                mode="edit"
-                                visit={visit}
-                                familyMembers={memberNames}
-                              />
-                              {visit.status === "booked" ? (
+                              {canEdit ? (
+                                <VisitForm
+                                  mode="edit"
+                                  visit={visit}
+                                  familyMembers={memberNames}
+                                />
+                              ) : null}
+                              {canEdit && visit.status === "booked" ? (
                                 <CancelVisitButton
                                   visitId={visit.id}
                                   label={visit.title}
@@ -1041,6 +1084,8 @@ export default async function Home() {
                             </div>
                           </div>
                         </article>
+                          );
+                        })()
                         ))}
                       </div>
                     ) : (

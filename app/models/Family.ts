@@ -16,6 +16,15 @@ const FamilySchema = new Schema(
     bookingRegion: { type: String },
     bookingPortalName: { type: String },
     bookingPortalUrl: { type: String },
+    notificationSettings: {
+      emailEnabled: { type: Boolean, default: true },
+      visitDaysBefore: { type: Number, default: 1 },
+      recipeDaysBefore: { type: Number, default: 7 },
+      paymentEnabled: { type: Boolean, default: true },
+      cancellationEnabled: { type: Boolean, default: true },
+      recipeEnabled: { type: Boolean, default: true },
+      documentEnabled: { type: Boolean, default: true },
+    },
   },
   { timestamps: true }
 );

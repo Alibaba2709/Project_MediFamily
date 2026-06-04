@@ -14,6 +14,16 @@ export type FamilyBookingSettings = {
   portalUrl: string;
 };
 
+export type FamilyNotificationSettings = {
+  emailEnabled: boolean;
+  visitDaysBefore: number;
+  recipeDaysBefore: number;
+  paymentEnabled: boolean;
+  cancellationEnabled: boolean;
+  recipeEnabled: boolean;
+  documentEnabled: boolean;
+};
+
 const tones = ["bg-[#f9d8d6]", "bg-[#d9eadf]", "bg-[#dbe7fb]", "bg-[#f7e2bf]"];
 const pugliaBookingSettings: FamilyBookingSettings = {
   region: "Puglia",
@@ -36,6 +46,7 @@ type StoredFamily = {
   bookingRegion?: string;
   bookingPortalName?: string;
   bookingPortalUrl?: string;
+  notificationSettings?: Partial<FamilyNotificationSettings>;
 };
 
 export async function getFamilyMembers(user: CurrentUser): Promise<FamilyMember[]> {
@@ -97,5 +108,26 @@ export async function getFamilyBookingSettings(
     region: "",
     portalName: "Portale prenotazioni",
     portalUrl: "",
+  };
+}
+
+export async function getFamilyNotificationSettings(
+  user: CurrentUser
+): Promise<FamilyNotificationSettings> {
+  await connectMongo();
+
+  const family = await mongoose.connection
+    .collection("families")
+    .findOne<StoredFamily>({ key: user.familyId });
+  const settings = family?.notificationSettings ?? {};
+
+  return {
+    emailEnabled: settings.emailEnabled ?? true,
+    visitDaysBefore: settings.visitDaysBefore ?? 1,
+    recipeDaysBefore: settings.recipeDaysBefore ?? 7,
+    paymentEnabled: settings.paymentEnabled ?? true,
+    cancellationEnabled: settings.cancellationEnabled ?? true,
+    recipeEnabled: settings.recipeEnabled ?? true,
+    documentEnabled: settings.documentEnabled ?? true,
   };
 }

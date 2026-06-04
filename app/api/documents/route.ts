@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { connectMongo } from "@/app/lib/mongodb";
 import { getCurrentUser } from "@/app/lib/auth";
+import { canEditHealth, forbidden } from "@/app/lib/permissions";
 import { HealthDocument } from "@/app/models/HealthDocument";
 
 const MAX_FILE_SIZE = 2 * 1024 * 1024;
@@ -11,6 +12,8 @@ export async function GET() {
   if (!user?.emailVerifiedAt) {
     return NextResponse.json({ error: "Non autorizzata." }, { status: 401 });
   }
+
+  if (!canEditHealth(user)) return forbidden();
 
   await connectMongo();
 

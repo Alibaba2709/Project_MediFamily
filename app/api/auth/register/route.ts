@@ -3,7 +3,6 @@ import { connectMongo } from "@/app/lib/mongodb";
 import {
   buildAppUrl,
   createRawToken,
-  createSession,
   hashPassword,
   hashToken,
   normalizeEmail,
@@ -11,6 +10,7 @@ import {
 } from "@/app/lib/auth";
 import mongoose from "mongoose";
 import { User } from "@/app/models/User";
+import { sendEmail, verificationEmail } from "@/app/lib/email";
 
 const defaultMembers = [
   { name: "Rossana Addante", role: "Utente principale" },
@@ -96,17 +96,32 @@ export async function POST(request: Request) {
       emailVerificationTokenHash: hashToken(verificationToken),
       emailVerificationExpiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
     });
+    const verificationLink = buildAppUrl(
+      `/verify-email?token=${verificationToken}`,
+      request
+    );
+    const emailContent = verificationEmail(verificationLink);
+    const emailResult = await sendEmail({
+      to: email,
+      ...emailContent,
+    });
 
-    await createSession(user._id.toString());
+    if (!emailResult.ok) {
+      await User.deleteOne({ _id: user._id });
+      if (familyId !== "famiglia-addante") {
+        await mongoose.connection.collection("families").deleteOne({ key: familyId });
+      }
+
+      return NextResponse.json(
+        { error: emailResult.error },
+        { status: 500 }
+      );
+    }
 
     return NextResponse.json(
       {
         message:
-          "Account creato. Verifica la tua email per entrare nella dashboard.",
-        verificationLink: buildAppUrl(
-          `/verify-email?token=${verificationToken}`,
-          request
-        ),
+          "Account creato. Ti abbiamo inviato una email di verifica.",
       },
       { status: 201 }
     );
