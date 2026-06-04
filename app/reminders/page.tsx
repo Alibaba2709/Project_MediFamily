@@ -42,6 +42,9 @@ type StoredMedication = {
   memberName: string;
   name: string;
   dosage?: string;
+  stockQuantity?: number;
+  stockUnit?: string;
+  lowStockThreshold?: number;
   intakeTime?: string;
   intakeTimes?: string[];
   frequency?: string;
@@ -237,6 +240,24 @@ async function getReminders(
           type: "medication" as const,
         }))
       );
+    }
+
+    if (
+      medication.stockQuantity !== undefined &&
+      medication.lowStockThreshold !== undefined &&
+      medication.stockQuantity <= medication.lowStockThreshold
+    ) {
+      items.push({
+        date: new Date().toISOString(),
+        detail: `${memberName} · ${medication.name} · ${medication.stockQuantity} ${
+          medication.stockUnit || "dosi"
+        } rimaste`,
+        href: `/medications#medication-${medication._id.toString()}`,
+        memberName,
+        title: "Scorta farmaco bassa",
+        tone: "border-[#f1d8cf] bg-[#fff7f5] text-[#7f5146]",
+        type: "medication" as const,
+      });
     }
 
     return items;

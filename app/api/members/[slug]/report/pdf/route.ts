@@ -198,6 +198,9 @@ export async function GET(_request: Request, context: RouteContext) {
             medication.dosage || "dosaggio non impostato",
             getMedicationTimes(medication).join(", ") ||
               "orario non impostato",
+            medication.stockQuantity !== undefined
+              ? `scorta: ${medication.stockQuantity} ${medication.stockUnit || "dosi"}`
+              : "scorta non impostata",
             `fine terapia: ${formatDate(medication.endDate)}`,
           ].join(" - "),
           medication.notes ? `Note: ${medication.notes}` : "",

@@ -139,6 +139,10 @@ export default async function MemberReportPage(context: RouteContext) {
                 detail={`${medication.dosage || "dosaggio non impostato"} · ${
                   getMedicationTimes(medication).join(", ") ||
                   "orario non impostato"
+                } · Scorta: ${
+                  medication.stockQuantity !== undefined
+                    ? `${medication.stockQuantity} ${medication.stockUnit || "dosi"}`
+                    : "non impostata"
                 } · Fine terapia: ${formatDate(medication.endDate)}`}
                 key={String(medication._id)}
                 note={medication.notes}

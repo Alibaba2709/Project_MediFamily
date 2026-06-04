@@ -6,6 +6,10 @@ const MedicationSchema = new Schema(
     memberName: { type: String, required: true },
     name: { type: String, required: true },
     dosage: { type: String },
+    stockQuantity: { type: Number },
+    stockUnit: { type: String },
+    unitsPerDose: { type: Number, default: 1 },
+    lowStockThreshold: { type: Number },
     intakeTime: { type: String },
     intakeTimes: [{ type: String }],
     frequency: {

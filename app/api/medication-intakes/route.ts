@@ -45,13 +45,15 @@ export async function POST(request: Request) {
     );
   }
 
+  const intakeQuery = {
+    familyId: user.familyId,
+    medicationId,
+    intakeDate,
+    intakeTime,
+  };
+  const previousIntake = await MedicationIntake.findOne(intakeQuery);
   const intake = await MedicationIntake.findOneAndUpdate(
-    {
-      familyId: user.familyId,
-      medicationId,
-      intakeDate,
-      intakeTime,
-    },
+    intakeQuery,
     {
       familyId: user.familyId,
       medicationId,
@@ -63,6 +65,27 @@ export async function POST(request: Request) {
     },
     { new: true, upsert: true, runValidators: true }
   );
+
+  const wasTaken = previousIntake?.status === "taken";
+  const isTaken = status === "taken";
+  const stockQuantity = Number(medication.stockQuantity);
+  const unitsPerDose = Number(medication.unitsPerDose ?? 1);
+
+  if (
+    Number.isFinite(stockQuantity) &&
+    Number.isFinite(unitsPerDose) &&
+    unitsPerDose > 0 &&
+    wasTaken !== isTaken
+  ) {
+    const nextStock = isTaken
+      ? Math.max(0, stockQuantity - unitsPerDose)
+      : stockQuantity + unitsPerDose;
+
+    await Medication.updateOne(
+      { _id: medicationId, familyId: user.familyId },
+      { $set: { stockQuantity: nextStock } }
+    );
+  }
 
   return NextResponse.json(intake);
 }

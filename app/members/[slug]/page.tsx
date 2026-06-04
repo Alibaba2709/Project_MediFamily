@@ -229,6 +229,12 @@ export default async function MemberPage(context: RouteContext) {
                   <p className="mt-1 text-xs text-[#7a6f68]">
                     Fine terapia: {formatDate(medication.endDate)}
                   </p>
+                  {medication.stockQuantity !== undefined ? (
+                    <p className="mt-1 text-xs text-[#7a6f68]">
+                      Scorta: {medication.stockQuantity}{" "}
+                      {medication.stockUnit || "dosi"}
+                    </p>
+                  ) : null}
                   {medication.notes ? (
                     <ItemNote>{medication.notes}</ItemNote>
                   ) : null}

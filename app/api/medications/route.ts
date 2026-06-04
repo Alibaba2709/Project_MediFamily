@@ -15,6 +15,13 @@ function normalizeFrequency(value: unknown) {
   return frequencies.includes(frequency) ? frequency : "daily";
 }
 
+function normalizeOptionalNumber(value: unknown) {
+  if (value === undefined || value === null || value === "") return undefined;
+
+  const number = Number(value);
+  return Number.isFinite(number) && number >= 0 ? number : undefined;
+}
+
 export async function GET() {
   const user = await getCurrentUser();
 
@@ -62,6 +69,10 @@ export async function POST(request: Request) {
     memberName,
     name,
     dosage: body.dosage ? String(body.dosage).trim() : undefined,
+    stockQuantity: normalizeOptionalNumber(body.stockQuantity),
+    stockUnit: body.stockUnit ? String(body.stockUnit).trim() : undefined,
+    unitsPerDose: normalizeOptionalNumber(body.unitsPerDose) ?? 1,
+    lowStockThreshold: normalizeOptionalNumber(body.lowStockThreshold),
     intakeTime: intakeTimes[0],
     intakeTimes,
     frequency,

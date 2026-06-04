@@ -16,6 +16,13 @@ function normalizeFrequency(value: unknown) {
   return frequencies.includes(frequency) ? frequency : "daily";
 }
 
+function normalizeOptionalNumber(value: unknown) {
+  if (value === undefined || value === null || value === "") return undefined;
+
+  const number = Number(value);
+  return Number.isFinite(number) && number >= 0 ? number : undefined;
+}
+
 type RouteContext = {
   params: Promise<{
     id: string;
@@ -75,8 +82,22 @@ export async function PATCH(request: Request, context: RouteContext) {
 
     unsetFields[field] = "";
   };
+  const setOptionalNumberField = (field: string, value: unknown) => {
+    const normalized = normalizeOptionalNumber(value);
+
+    if (normalized !== undefined) {
+      setFields[field] = normalized;
+      return;
+    }
+
+    unsetFields[field] = "";
+  };
 
   setOptionalField("dosage", body.dosage);
+  setOptionalNumberField("stockQuantity", body.stockQuantity);
+  setOptionalField("stockUnit", body.stockUnit);
+  setFields.unitsPerDose = normalizeOptionalNumber(body.unitsPerDose) ?? 1;
+  setOptionalNumberField("lowStockThreshold", body.lowStockThreshold);
   setOptionalField("startDate", body.startDate);
   setOptionalField("endDate", body.endDate);
   setOptionalField("notes", body.notes);

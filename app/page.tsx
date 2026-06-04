@@ -99,6 +99,10 @@ type DashboardMedication = {
   memberName: string;
   name: string;
   dosage?: string;
+  stockQuantity?: number;
+  stockUnit?: string;
+  unitsPerDose?: number;
+  lowStockThreshold?: number;
   intakeTime?: string;
   intakeTimes?: string[];
   frequency?: string;
@@ -115,6 +119,10 @@ type StoredMedication = {
   memberName: string;
   name: string;
   dosage?: string;
+  stockQuantity?: number;
+  stockUnit?: string;
+  unitsPerDose?: number;
+  lowStockThreshold?: number;
   intakeTime?: string;
   intakeTimes?: string[];
   frequency?: string;
@@ -309,6 +317,10 @@ async function getMedications(
       memberName: medication.memberName,
       name: medication.name,
       dosage: medication.dosage,
+      stockQuantity: medication.stockQuantity,
+      stockUnit: medication.stockUnit,
+      unitsPerDose: medication.unitsPerDose,
+      lowStockThreshold: medication.lowStockThreshold,
       intakeTime: medication.intakeTime,
       intakeTimes: medication.intakeTimes ?? [],
       frequency: medication.frequency ?? "daily",
@@ -509,11 +521,30 @@ function buildUrgencyItems(
       }))
     );
 
+  const lowStockItems = medications
+    .filter(
+      (medication) =>
+        medication.active &&
+        medication.stockQuantity !== undefined &&
+        medication.lowStockThreshold !== undefined &&
+        medication.stockQuantity <= medication.lowStockThreshold
+    )
+    .map((medication) => ({
+      date: new Date().toISOString(),
+      title: "Scorta farmaco bassa",
+      detail: `${medication.memberName} · ${medication.name} · ${medication.stockQuantity} ${
+        medication.stockUnit || "dosi"
+      } rimaste`,
+      tone: "border-[#f1d8cf] bg-[#fff7f5]",
+      href: `/medications#medication-${medication.id}`,
+    }));
+
   return [
     ...visitItems,
     ...recipeItems,
     ...medicationItems,
     ...activeMedicationItems,
+    ...lowStockItems,
   ]
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
     .slice(0, 6);
@@ -606,6 +637,9 @@ function buildSearchItems(
       medication.memberName,
       medication.name,
       medication.dosage,
+      medication.stockQuantity?.toString(),
+      medication.stockUnit,
+      medication.lowStockThreshold?.toString(),
       medication.intakeTime,
       medication.intakeTimes?.join(" "),
       medication.schedule,

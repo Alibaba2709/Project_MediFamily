@@ -25,6 +25,10 @@ type StoredMedication = {
   memberName: string;
   name: string;
   dosage?: string;
+  stockQuantity?: number;
+  stockUnit?: string;
+  unitsPerDose?: number;
+  lowStockThreshold?: number;
   intakeTime?: string;
   intakeTimes?: string[];
   frequency?: string;
@@ -49,6 +53,10 @@ async function getMedications(familyId: string) {
       memberName: medication.memberName,
       name: medication.name,
       dosage: medication.dosage,
+      stockQuantity: medication.stockQuantity,
+      stockUnit: medication.stockUnit,
+      unitsPerDose: medication.unitsPerDose,
+      lowStockThreshold: medication.lowStockThreshold,
       intakeTime: medication.intakeTime,
       intakeTimes: medication.intakeTimes ?? [],
       frequency: medication.frequency ?? "daily",
@@ -158,6 +166,19 @@ function getDoseStatusTone(statusLabel: string) {
   return tones[statusLabel] ?? tones.Programmato;
 }
 
+function hasLowStock(medication: MedicationItem) {
+  return (
+    medication.stockQuantity !== undefined &&
+    medication.lowStockThreshold !== undefined &&
+    medication.stockQuantity <= medication.lowStockThreshold
+  );
+}
+
+function formatStock(medication: MedicationItem) {
+  if (medication.stockQuantity === undefined) return "";
+  return `${medication.stockQuantity} ${medication.stockUnit || "dosi"}`;
+}
+
 function buildTodayTherapies(
   medications: MedicationItem[],
   intakes: IntakeItem[],
@@ -183,6 +204,8 @@ function buildTodayTherapies(
           memberName: medication.memberName,
           name: medication.name,
           notes: medication.notes,
+          stockLabel: formatStock(medication),
+          stockLow: hasLowStock(medication),
           status,
           statusLabel: getDoseStatusLabel(time, status),
         };
@@ -442,6 +465,12 @@ export default async function MedicationsPage({
                             {therapy.notes ? (
                               <p className="mt-1 text-sm text-[#6c5f57]">
                                 {therapy.notes}
+                              </p>
+                            ) : null}
+                            {therapy.stockLabel ? (
+                              <p className="mt-1 text-sm text-[#6c5f57]">
+                                Scorta: {therapy.stockLabel}
+                                {therapy.stockLow ? " · bassa" : ""}
                               </p>
                             ) : null}
                           </div>

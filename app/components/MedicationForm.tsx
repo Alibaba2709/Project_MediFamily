@@ -11,6 +11,10 @@ const initialForm = {
   memberName: fallbackFamilyMembers[0],
   name: "",
   dosage: "",
+  stockQuantity: "",
+  stockUnit: "compresse",
+  unitsPerDose: "1",
+  lowStockThreshold: "",
   intakeTimes: [""],
   frequency: "daily",
   weekdays: [] as number[],
@@ -25,6 +29,10 @@ type EditableMedication = {
   memberName: string;
   name: string;
   dosage?: string;
+  stockQuantity?: number;
+  stockUnit?: string;
+  unitsPerDose?: number;
+  lowStockThreshold?: number;
   intakeTime?: string;
   intakeTimes?: string[];
   frequency?: string;
@@ -63,6 +71,10 @@ function buildInitialForm(
     memberName: medication.memberName || defaultMember,
     name: medication.name,
     dosage: medication.dosage ?? "",
+    stockQuantity: medication.stockQuantity?.toString() ?? "",
+    stockUnit: medication.stockUnit ?? "compresse",
+    unitsPerDose: medication.unitsPerDose?.toString() ?? "1",
+    lowStockThreshold: medication.lowStockThreshold?.toString() ?? "",
     intakeTimes:
       medication.intakeTimes?.length
         ? medication.intakeTimes
@@ -336,6 +348,95 @@ export function MedicationForm({
                     }
                   />
                 </label>
+              </div>
+
+              <div className="rounded-lg border border-[#eadfd7] bg-[#fffaf6] p-4">
+                <p className="text-sm font-semibold text-[#4f5c55]">
+                  Scorte farmaco
+                </p>
+                <div className="mt-3 grid gap-4 md:grid-cols-2">
+                  <label className="space-y-2">
+                    <span className="text-sm font-semibold text-[#4f5c55]">
+                      Quantità disponibile
+                    </span>
+                    <input
+                      className="h-11 w-full rounded-md border border-[#ded4cb] bg-white px-3 text-sm outline-none placeholder:text-[#a1968e] focus:border-[#789888] focus:ring-2 focus:ring-[#d9eadf]"
+                      min="0"
+                      placeholder="Es. 30"
+                      step="0.5"
+                      type="number"
+                      value={form.stockQuantity}
+                      onChange={(event) =>
+                        setForm((current) => ({
+                          ...current,
+                          stockQuantity: event.target.value,
+                        }))
+                      }
+                    />
+                  </label>
+
+                  <label className="space-y-2">
+                    <span className="text-sm font-semibold text-[#4f5c55]">
+                      Unità
+                    </span>
+                    <select
+                      className="h-11 w-full rounded-md border border-[#ded4cb] bg-white px-3 text-sm outline-none focus:border-[#789888] focus:ring-2 focus:ring-[#d9eadf]"
+                      value={form.stockUnit}
+                      onChange={(event) =>
+                        setForm((current) => ({
+                          ...current,
+                          stockUnit: event.target.value,
+                        }))
+                      }
+                    >
+                      <option value="compresse">Compresse</option>
+                      <option value="capsule">Capsule</option>
+                      <option value="bustine">Bustine</option>
+                      <option value="fiale">Fiale</option>
+                      <option value="ml">ml</option>
+                      <option value="dosi">Dosi</option>
+                    </select>
+                  </label>
+
+                  <label className="space-y-2">
+                    <span className="text-sm font-semibold text-[#4f5c55]">
+                      Consumo per assunzione
+                    </span>
+                    <input
+                      className="h-11 w-full rounded-md border border-[#ded4cb] bg-white px-3 text-sm outline-none placeholder:text-[#a1968e] focus:border-[#789888] focus:ring-2 focus:ring-[#d9eadf]"
+                      min="0"
+                      step="0.5"
+                      type="number"
+                      value={form.unitsPerDose}
+                      onChange={(event) =>
+                        setForm((current) => ({
+                          ...current,
+                          unitsPerDose: event.target.value,
+                        }))
+                      }
+                    />
+                  </label>
+
+                  <label className="space-y-2">
+                    <span className="text-sm font-semibold text-[#4f5c55]">
+                      Avvisa sotto
+                    </span>
+                    <input
+                      className="h-11 w-full rounded-md border border-[#ded4cb] bg-white px-3 text-sm outline-none placeholder:text-[#a1968e] focus:border-[#789888] focus:ring-2 focus:ring-[#d9eadf]"
+                      min="0"
+                      placeholder="Es. 5"
+                      step="0.5"
+                      type="number"
+                      value={form.lowStockThreshold}
+                      onChange={(event) =>
+                        setForm((current) => ({
+                          ...current,
+                          lowStockThreshold: event.target.value,
+                        }))
+                      }
+                    />
+                  </label>
+                </div>
               </div>
 
               <div className="grid gap-4 md:grid-cols-2">

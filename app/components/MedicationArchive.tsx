@@ -16,6 +16,10 @@ type MedicationItem = {
   memberName: string;
   name: string;
   dosage?: string;
+  stockQuantity?: number;
+  stockUnit?: string;
+  unitsPerDose?: number;
+  lowStockThreshold?: number;
   intakeTime?: string;
   intakeTimes?: string[];
   frequency?: string;
@@ -63,6 +67,20 @@ function formatDate(value?: string) {
 
 function isEnded(medication: MedicationItem) {
   return Boolean(medication.endDate && medication.endDate < todayDateKey());
+}
+
+function hasLowStock(medication: MedicationItem) {
+  return (
+    medication.stockQuantity !== undefined &&
+    medication.lowStockThreshold !== undefined &&
+    medication.stockQuantity <= medication.lowStockThreshold
+  );
+}
+
+function formatStock(medication: MedicationItem) {
+  if (medication.stockQuantity === undefined) return "Non impostata";
+
+  return `${medication.stockQuantity} ${medication.stockUnit || "dosi"}`;
 }
 
 function matchesFilter(
@@ -187,6 +205,11 @@ export function MedicationArchive({
                         Terminato
                       </span>
                     ) : null}
+                    {hasLowStock(medication) ? (
+                      <span className="rounded-md bg-[#fff7f5] px-2 py-1 text-xs font-semibold text-[#8a564c]">
+                        Scorta bassa
+                      </span>
+                    ) : null}
                   </div>
                   <p className="mt-1 text-sm text-[#6c5f57]">
                     {medication.dosage || "Dosaggio non impostato"}
@@ -198,6 +221,12 @@ export function MedicationArchive({
                   </p>
                   <p className="mt-1 text-sm text-[#6c5f57]">
                     Frequenza: {frequencyLabels[medication.frequency ?? "daily"]}
+                  </p>
+                  <p className="mt-1 text-sm text-[#6c5f57]">
+                    Scorta: {formatStock(medication)}
+                    {medication.unitsPerDose
+                      ? ` · consumo ${medication.unitsPerDose} per dose`
+                      : ""}
                   </p>
                   {medication.schedule ? (
                     <p className="mt-1 text-sm text-[#6c5f57]">
