@@ -6,6 +6,7 @@ const MedicationSchema = new Schema(
     memberName: { type: String, required: true },
     name: { type: String, required: true },
     dosage: { type: String },
+    intakeTime: { type: String },
     schedule: { type: String },
     startDate: { type: Date },
     endDate: { type: Date },

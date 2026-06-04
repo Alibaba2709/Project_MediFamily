@@ -17,6 +17,7 @@ type StoredMedication = {
   memberName: string;
   name: string;
   dosage?: string;
+  intakeTime?: string;
   schedule?: string;
   startDate?: Date;
   endDate?: Date;
@@ -37,6 +38,7 @@ async function getMedications(familyId: string) {
       memberName: medication.memberName,
       name: medication.name,
       dosage: medication.dosage,
+      intakeTime: medication.intakeTime,
       schedule: medication.schedule,
       startDate: medication.startDate?.toISOString(),
       endDate: medication.endDate?.toISOString(),
@@ -46,6 +48,10 @@ async function getMedications(familyId: string) {
   } catch {
     return [];
   }
+}
+
+function medicationTimeSortValue(value?: string) {
+  return value || "99:99";
 }
 
 function formatDate(value?: string) {
@@ -69,6 +75,10 @@ function groupMedicationsByMember(
       ...member,
       medications: medications.filter(
         (medication) => medication.memberName === member.name
+      ).sort((a, b) =>
+        medicationTimeSortValue(a.intakeTime).localeCompare(
+          medicationTimeSortValue(b.intakeTime)
+        )
       ),
     }))
     .filter((group) => group.medications.length > 0);
@@ -89,6 +99,10 @@ function groupMedicationsByMember(
       imageDataUrl: undefined,
       medications: medications.filter(
         (medication) => medication.memberName === name
+      ).sort((a, b) =>
+        medicationTimeSortValue(a.intakeTime).localeCompare(
+          medicationTimeSortValue(b.intakeTime)
+        )
       ),
     })),
   ];
@@ -195,8 +209,13 @@ export default async function MedicationsPage() {
                         {medication.dosage || "Dosaggio non impostato"}
                       </p>
                       <p className="mt-3 text-sm text-[#6c5f57]">
-                        Orari: {medication.schedule || "Non impostati"}
+                        Orario: {medication.intakeTime || "Non impostato"}
                       </p>
+                      {medication.schedule ? (
+                        <p className="mt-1 text-sm text-[#6c5f57]">
+                          Indicazioni salvate: {medication.schedule}
+                        </p>
+                      ) : null}
                       <p className="mt-1 text-sm text-[#6c5f57]">
                         Inizio terapia: {formatDate(medication.startDate)}
                       </p>

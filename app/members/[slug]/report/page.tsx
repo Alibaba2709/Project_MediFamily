@@ -34,6 +34,10 @@ function formatMoney(value?: number) {
   }).format(value);
 }
 
+function medicationTimeSortValue(value?: string) {
+  return value || "99:99";
+}
+
 export default async function MemberReportPage(context: RouteContext) {
   const user = await requireVerifiedUser();
   const members = await getFamilyMembers(user);
@@ -64,6 +68,11 @@ export default async function MemberReportPage(context: RouteContext) {
       .sort({ createdAt: -1 })
       .select("-fileData"),
   ]);
+  const sortedMedications = [...medications].sort((a, b) =>
+    medicationTimeSortValue(a.intakeTime).localeCompare(
+      medicationTimeSortValue(b.intakeTime)
+    )
+  );
 
   return (
     <main className="min-h-screen bg-[#fffaf6] px-5 py-6 text-[#2f3330] print:bg-white sm:px-8">
@@ -124,11 +133,11 @@ export default async function MemberReportPage(context: RouteContext) {
         </ReportSection>
 
         <ReportSection title="Farmaci">
-          {medications.length ? (
-            medications.map((medication) => (
+          {sortedMedications.length ? (
+            sortedMedications.map((medication) => (
               <ReportItem
                 detail={`${medication.dosage || "dosaggio non impostato"} · ${
-                  medication.schedule || "orari non impostati"
+                  medication.intakeTime || "orario non impostato"
                 } · Fine terapia: ${formatDate(medication.endDate)}`}
                 key={String(medication._id)}
                 note={medication.notes}

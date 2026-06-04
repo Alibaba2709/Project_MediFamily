@@ -32,6 +32,10 @@ function formatMoney(value?: number) {
   }).format(value);
 }
 
+function medicationTimeSortValue(value?: string) {
+  return value || "99:99";
+}
+
 function pdfEscape(value: string) {
   return value
     .normalize("NFKD")
@@ -159,6 +163,11 @@ export async function GET(_request: Request, context: RouteContext) {
       .sort({ createdAt: -1 })
       .select("-fileData"),
   ]);
+  const sortedMedications = [...medications].sort((a, b) =>
+    medicationTimeSortValue(a.intakeTime).localeCompare(
+      medicationTimeSortValue(b.intakeTime)
+    )
+  );
 
   const lines = [
     `MediFamily - Report salute`,
@@ -182,12 +191,12 @@ export async function GET(_request: Request, context: RouteContext) {
       : ["Nessun dato registrato."]),
     "",
     "FARMACI",
-    ...(medications.length
-      ? medications.flatMap((medication) => [
+    ...(sortedMedications.length
+      ? sortedMedications.flatMap((medication) => [
           [
             medication.name,
             medication.dosage || "dosaggio non impostato",
-            medication.schedule || "orari non impostati",
+            medication.intakeTime || "orario non impostato",
             `fine terapia: ${formatDate(medication.endDate)}`,
           ].join(" - "),
           medication.notes ? `Note: ${medication.notes}` : "",

@@ -41,6 +41,10 @@ function formatMoney(value?: number) {
   }).format(value);
 }
 
+function medicationTimeSortValue(value?: string) {
+  return value || "99:99";
+}
+
 export default async function MemberPage(context: RouteContext) {
   const user = await requireVerifiedUser();
   const members = await getFamilyMembers(user);
@@ -73,6 +77,11 @@ export default async function MemberPage(context: RouteContext) {
       .sort({ createdAt: -1 })
       .select("-fileData"),
   ]);
+  const sortedMedications = [...medications].sort((a, b) =>
+    medicationTimeSortValue(a.intakeTime).localeCompare(
+      medicationTimeSortValue(b.intakeTime)
+    )
+  );
   const timeline = [
     ...visits.map((visit) => ({
       date: visit.visitDate,
@@ -92,14 +101,15 @@ export default async function MemberPage(context: RouteContext) {
         : "Codice non impostato",
       note: recipe.notes,
     })),
-    ...medications.map((medication) => ({
+    ...sortedMedications.map((medication) => ({
       date: medication.startDate ?? medication.createdAt,
       type: "Farmaco",
       title: String(medication.name),
       detail: [
-        medication.schedule
-          ? `Orari: ${medication.schedule}`
-          : "Orari non impostati",
+        medication.intakeTime
+          ? `Orario: ${medication.intakeTime}`
+          : "Orario non impostato",
+        medication.schedule ? `Indicazioni: ${medication.schedule}` : "",
         medication.endDate ? `Fine: ${formatDate(medication.endDate)}` : "",
       ]
         .filter(Boolean)
@@ -201,8 +211,8 @@ export default async function MemberPage(context: RouteContext) {
           </ProfilePanel>
 
           <ProfilePanel icon={Pill} title="Farmaci">
-            {medications.length ? (
-              medications.map((medication) => (
+            {sortedMedications.length ? (
+              sortedMedications.map((medication) => (
                 <div
                   className="rounded-md bg-[#fffaf6] px-3 py-2"
                   key={String(medication._id)}
@@ -210,6 +220,9 @@ export default async function MemberPage(context: RouteContext) {
                   <p className="text-sm font-semibold text-[#4f5c55]">
                     {medication.name} ·{" "}
                     {medication.dosage || "dosaggio non impostato"}
+                  </p>
+                  <p className="mt-1 text-xs text-[#7a6f68]">
+                    Orario: {medication.intakeTime || "Non impostato"}
                   </p>
                   <p className="mt-1 text-xs text-[#7a6f68]">
                     Fine terapia: {formatDate(medication.endDate)}

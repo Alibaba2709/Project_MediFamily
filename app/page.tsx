@@ -94,6 +94,7 @@ type DashboardMedication = {
   memberName: string;
   name: string;
   dosage?: string;
+  intakeTime?: string;
   schedule?: string;
   startDate?: string;
   endDate?: string;
@@ -106,6 +107,7 @@ type StoredMedication = {
   memberName: string;
   name: string;
   dosage?: string;
+  intakeTime?: string;
   schedule?: string;
   startDate?: Date;
   endDate?: Date;
@@ -296,6 +298,7 @@ async function getMedications(
       memberName: medication.memberName,
       name: medication.name,
       dosage: medication.dosage,
+      intakeTime: medication.intakeTime,
       schedule: medication.schedule,
       startDate: medication.startDate?.toISOString(),
       endDate: medication.endDate?.toISOString(),
@@ -380,6 +383,17 @@ function isWithinDays(value: string, days: number) {
   return date >= today && date <= limit;
 }
 
+function todayAtTime(value?: string) {
+  const date = new Date();
+  const [hours, minutes] = (value ?? "").split(":").map(Number);
+
+  if (Number.isFinite(hours) && Number.isFinite(minutes)) {
+    date.setHours(hours, minutes, 0, 0);
+  }
+
+  return date.toISOString();
+}
+
 function buildUrgencyItems(
   visits: DashboardVisit[],
   recipes: DashboardRecipe[],
@@ -457,12 +471,21 @@ function buildUrgencyItems(
     }));
 
   const activeMedicationItems = medications
-    .filter((medication) => medication.active && !medication.endDate)
+    .filter(
+      (medication) =>
+        medication.active &&
+        (!medication.endDate || !isWithinDays(medication.endDate, 7))
+    )
+    .sort((a, b) =>
+      (a.intakeTime || "99:99").localeCompare(b.intakeTime || "99:99")
+    )
     .slice(0, 3)
     .map((medication) => ({
-      date: new Date().toISOString(),
+      date: todayAtTime(medication.intakeTime),
       title: "Terapia attiva",
       detail: `${medication.memberName} · ${medication.name}${
+        medication.intakeTime ? ` · ${medication.intakeTime}` : ""
+      }${
         medication.schedule ? ` · ${medication.schedule}` : ""
       }`,
       tone: "border-[#d5e0d8] bg-[#f6fbf7]",
@@ -558,7 +581,7 @@ function buildSearchItems(
     type: "Farmaco" as const,
     title: medication.name,
     detail: `${medication.dosage || "Dosaggio non impostato"} · ${
-      medication.schedule || "Orari non impostati"
+      medication.intakeTime || "Orario non impostato"
     }`,
     memberName: medication.memberName,
     href: `/medications#medication-${medication.id}`,
@@ -566,6 +589,7 @@ function buildSearchItems(
       medication.memberName,
       medication.name,
       medication.dosage,
+      medication.intakeTime,
       medication.schedule,
       medication.startDate,
       medication.endDate,

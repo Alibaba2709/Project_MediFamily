@@ -38,6 +38,7 @@ type StoredMedication = {
   memberName: string;
   name: string;
   dosage?: string;
+  intakeTime?: string;
   schedule?: string;
   endDate?: Date;
   active: boolean;
@@ -70,6 +71,17 @@ function withinNextDays(value: string, days: number) {
   const date = startOfDay(new Date(value));
 
   return date >= today && date <= limit;
+}
+
+function todayAtTime(value?: string) {
+  const date = new Date();
+  const [hours, minutes] = (value ?? "").split(":").map(Number);
+
+  if (Number.isFinite(hours) && Number.isFinite(minutes)) {
+    date.setHours(hours, minutes, 0, 0);
+  }
+
+  return date.toISOString();
 }
 
 async function getReminders(
@@ -190,11 +202,12 @@ async function getReminders(
     const endDate = medication.endDate?.toISOString();
 
     return {
-      date: endDate ?? new Date().toISOString(),
+      date: endDate ?? todayAtTime(medication.intakeTime),
       detail: `${memberName} · ${medication.name}${
         medication.dosage ? ` · ${medication.dosage}` : ""
-      }${medication.schedule ? ` · ${medication.schedule}` : ""}${
-        endDate ? ` · fine ${formatDate(endDate)}` : ""
+      }${medication.intakeTime ? ` · ${medication.intakeTime}` : ""}${
+        medication.schedule ? ` · ${medication.schedule}` : ""
+      }${endDate ? ` · fine ${formatDate(endDate)}` : ""
       }`,
       href: `/medications#medication-${medication._id.toString()}`,
       memberName,

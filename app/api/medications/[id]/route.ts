@@ -42,19 +42,43 @@ export async function PATCH(request: Request, context: RouteContext) {
     );
   }
 
+  const setFields: Record<string, unknown> = {
+    familyId: user.familyId,
+    memberName,
+    name,
+    active: body.active ?? true,
+  };
+  const unsetFields: Record<string, ""> = {};
+  const setOptionalField = (field: string, value: unknown) => {
+    const normalized = value === undefined ? "" : String(value).trim();
+
+    if (normalized) {
+      setFields[field] = normalized;
+      return;
+    }
+
+    unsetFields[field] = "";
+  };
+
+  setOptionalField("dosage", body.dosage);
+  setOptionalField("intakeTime", body.intakeTime);
+  setOptionalField("startDate", body.startDate);
+  setOptionalField("endDate", body.endDate);
+  setOptionalField("notes", body.notes);
+
+  if ("schedule" in body) {
+    setOptionalField("schedule", body.schedule);
+  }
+
+  const update: Record<string, unknown> = { $set: setFields };
+
+  if (Object.keys(unsetFields).length > 0) {
+    update.$unset = unsetFields;
+  }
+
   const medication = await Medication.findOneAndUpdate(
     { _id: id, familyId: user.familyId },
-    {
-      familyId: user.familyId,
-      memberName,
-      name,
-      dosage: body.dosage ? String(body.dosage).trim() : undefined,
-      schedule: body.schedule ? String(body.schedule).trim() : undefined,
-      startDate: body.startDate || undefined,
-      endDate: body.endDate || undefined,
-      active: body.active ?? true,
-      notes: body.notes ? String(body.notes).trim() : undefined,
-    },
+    update,
     { new: true, runValidators: true }
   );
 

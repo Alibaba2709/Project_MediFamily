@@ -49,6 +49,7 @@ export async function POST(request: Request) {
     memberName,
     name,
     dosage: body.dosage ? String(body.dosage).trim() : undefined,
+    intakeTime: body.intakeTime ? String(body.intakeTime).trim() : undefined,
     schedule: body.schedule ? String(body.schedule).trim() : undefined,
     startDate: body.startDate || undefined,
     endDate: body.endDate || undefined,

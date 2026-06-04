@@ -10,7 +10,7 @@ const initialForm = {
   memberName: fallbackFamilyMembers[0],
   name: "",
   dosage: "",
-  schedule: "",
+  intakeTime: "",
   startDate: "",
   endDate: "",
   active: "true",
@@ -22,6 +22,7 @@ type EditableMedication = {
   memberName: string;
   name: string;
   dosage?: string;
+  intakeTime?: string;
   schedule?: string;
   startDate?: string;
   endDate?: string;
@@ -56,7 +57,7 @@ function buildInitialForm(
     memberName: medication.memberName || defaultMember,
     name: medication.name,
     dosage: medication.dosage ?? "",
-    schedule: medication.schedule ?? "",
+    intakeTime: medication.intakeTime ?? "",
     startDate: toDateInput(medication.startDate),
     endDate: toDateInput(medication.endDate),
     active: medication.active ? "true" : "false",
@@ -105,6 +106,7 @@ export function MedicationForm({
           ...form,
           startDate: form.startDate || undefined,
           endDate: form.endDate || undefined,
+          intakeTime: form.intakeTime || undefined,
           active: form.active === "true",
         }),
       }
@@ -284,22 +286,24 @@ export function MedicationForm({
                 </label>
               </div>
 
-              <label className="block space-y-2">
-                <span className="text-sm font-semibold text-[#4f5c55]">
-                  Orari
-                </span>
-                <input
-                  className="h-11 w-full rounded-md border border-[#ded4cb] bg-white px-3 text-sm outline-none placeholder:text-[#a1968e] focus:border-[#789888] focus:ring-2 focus:ring-[#d9eadf]"
-                  placeholder="Es. mattina e sera dopo i pasti"
-                  value={form.schedule}
-                  onChange={(event) =>
-                    setForm((current) => ({
-                      ...current,
-                      schedule: event.target.value,
-                    }))
-                  }
-                />
-              </label>
+              <div className="grid gap-4 md:grid-cols-2">
+                <label className="space-y-2">
+                  <span className="text-sm font-semibold text-[#4f5c55]">
+                    Orario assunzione
+                  </span>
+                  <input
+                    className="h-11 w-full rounded-md border border-[#ded4cb] bg-white px-3 text-sm outline-none focus:border-[#789888] focus:ring-2 focus:ring-[#d9eadf]"
+                    type="time"
+                    value={form.intakeTime}
+                    onChange={(event) =>
+                      setForm((current) => ({
+                        ...current,
+                        intakeTime: event.target.value,
+                      }))
+                    }
+                  />
+                </label>
+              </div>
 
               <label className="block space-y-2">
                 <span className="text-sm font-semibold text-[#4f5c55]">
@@ -307,7 +311,7 @@ export function MedicationForm({
                 </span>
                 <textarea
                   className="min-h-24 w-full resize-y rounded-md border border-[#ded4cb] bg-white px-3 py-3 text-sm outline-none placeholder:text-[#a1968e] focus:border-[#789888] focus:ring-2 focus:ring-[#d9eadf]"
-                  placeholder="Es. Non assumere a stomaco vuoto..."
+                  placeholder="Es. Dopo pasti, prima di dormire, non assumere a stomaco vuoto..."
                   value={form.notes}
                   onChange={(event) =>
                     setForm((current) => ({
