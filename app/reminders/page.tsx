@@ -8,6 +8,10 @@ import {
   normalizeFamilyMemberNames,
   type FamilyMember,
 } from "@/app/lib/family";
+import {
+  getMedicationTimes,
+  isMedicationDueOnDate,
+} from "@/app/lib/medications";
 import { Visit } from "@/app/models/Visit";
 import { Recipe } from "@/app/models/Recipe";
 import { Medication } from "@/app/models/Medication";
@@ -39,6 +43,9 @@ type StoredMedication = {
   name: string;
   dosage?: string;
   intakeTime?: string;
+  intakeTimes?: string[];
+  frequency?: string;
+  weekdays?: number[];
   schedule?: string;
   endDate?: Date;
   active: boolean;
@@ -197,26 +204,42 @@ async function getReminders(
       };
     });
 
-  const medicationReminders = medications.map((medication) => {
+  const medicationReminders = medications.flatMap((medication) => {
     const memberName = displayFamilyMemberName(medication.memberName, members);
     const endDate = medication.endDate?.toISOString();
+    const items: ReminderViewItem[] = [];
 
-    return {
-      date: endDate ?? todayAtTime(medication.intakeTime),
-      detail: `${memberName} · ${medication.name}${
-        medication.dosage ? ` · ${medication.dosage}` : ""
-      }${medication.intakeTime ? ` · ${medication.intakeTime}` : ""}${
-        medication.schedule ? ` · ${medication.schedule}` : ""
-      }${endDate ? ` · fine ${formatDate(endDate)}` : ""
-      }`,
-      href: `/medications#medication-${medication._id.toString()}`,
-      memberName,
-      title: endDate ? "Fine terapia" : "Farmaco attivo",
-      tone: endDate
-        ? "border-[#f0d3a6] bg-[#fff8e9] text-[#7a5b2f]"
-        : "border-[#d5e0d8] bg-[#f6fbf7] text-[#315a45]",
-      type: "medication" as const,
-    };
+    if (endDate && withinNextDays(endDate, 7)) {
+      items.push({
+        date: endDate,
+        detail: `${memberName} · ${medication.name} · fine ${formatDate(
+          endDate
+        )}`,
+        href: `/medications#medication-${medication._id.toString()}`,
+        memberName,
+        title: "Fine terapia",
+        tone: "border-[#f0d3a6] bg-[#fff8e9] text-[#7a5b2f]",
+        type: "medication" as const,
+      });
+    }
+
+    if (isMedicationDueOnDate(medication)) {
+      items.push(
+        ...getMedicationTimes(medication).map((time) => ({
+          date: todayAtTime(time),
+          detail: `${memberName} · ${medication.name}${
+            medication.dosage ? ` · ${medication.dosage}` : ""
+          } · ${time}${medication.schedule ? ` · ${medication.schedule}` : ""}`,
+          href: `/medications#medication-${medication._id.toString()}`,
+          memberName,
+          title: "Farmaco attivo",
+          tone: "border-[#d5e0d8] bg-[#f6fbf7] text-[#315a45]",
+          type: "medication" as const,
+        }))
+      );
+    }
+
+    return items;
   });
 
   const today = startOfDay(new Date());

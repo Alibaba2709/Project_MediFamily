@@ -38,6 +38,11 @@ import {
   memberSlug,
   normalizeFamilyMemberNames,
 } from "@/app/lib/family";
+import {
+  getMedicationTimes,
+  isMedicationDueOnDate,
+  medicationTimeSortValue,
+} from "@/app/lib/medications";
 
 type DashboardVisit = {
   id: string;
@@ -95,6 +100,9 @@ type DashboardMedication = {
   name: string;
   dosage?: string;
   intakeTime?: string;
+  intakeTimes?: string[];
+  frequency?: string;
+  weekdays?: number[];
   schedule?: string;
   startDate?: string;
   endDate?: string;
@@ -108,6 +116,9 @@ type StoredMedication = {
   name: string;
   dosage?: string;
   intakeTime?: string;
+  intakeTimes?: string[];
+  frequency?: string;
+  weekdays?: number[];
   schedule?: string;
   startDate?: Date;
   endDate?: Date;
@@ -299,6 +310,9 @@ async function getMedications(
       name: medication.name,
       dosage: medication.dosage,
       intakeTime: medication.intakeTime,
+      intakeTimes: medication.intakeTimes ?? [],
+      frequency: medication.frequency ?? "daily",
+      weekdays: medication.weekdays ?? [],
       schedule: medication.schedule,
       startDate: medication.startDate?.toISOString(),
       endDate: medication.endDate?.toISOString(),
@@ -473,24 +487,27 @@ function buildUrgencyItems(
   const activeMedicationItems = medications
     .filter(
       (medication) =>
+        isMedicationDueOnDate(medication) &&
         medication.active &&
         (!medication.endDate || !isWithinDays(medication.endDate, 7))
     )
     .sort((a, b) =>
-      (a.intakeTime || "99:99").localeCompare(b.intakeTime || "99:99")
+      medicationTimeSortValue(getMedicationTimes(a)[0]).localeCompare(
+        medicationTimeSortValue(getMedicationTimes(b)[0])
+      )
     )
     .slice(0, 3)
-    .map((medication) => ({
-      date: todayAtTime(medication.intakeTime),
-      title: "Terapia attiva",
-      detail: `${medication.memberName} · ${medication.name}${
-        medication.intakeTime ? ` · ${medication.intakeTime}` : ""
-      }${
-        medication.schedule ? ` · ${medication.schedule}` : ""
-      }`,
-      tone: "border-[#d5e0d8] bg-[#f6fbf7]",
-      href: `/medications#medication-${medication.id}`,
-    }));
+    .flatMap((medication) =>
+      getMedicationTimes(medication).map((time) => ({
+        date: todayAtTime(time),
+        title: "Terapia attiva",
+        detail: `${medication.memberName} · ${medication.name} · ${time}${
+          medication.schedule ? ` · ${medication.schedule}` : ""
+        }`,
+        tone: "border-[#d5e0d8] bg-[#f6fbf7]",
+        href: `/medications#medication-${medication.id}`,
+      }))
+    );
 
   return [
     ...visitItems,
@@ -581,7 +598,7 @@ function buildSearchItems(
     type: "Farmaco" as const,
     title: medication.name,
     detail: `${medication.dosage || "Dosaggio non impostato"} · ${
-      medication.intakeTime || "Orario non impostato"
+      getMedicationTimes(medication).join(", ") || "Orario non impostato"
     }`,
     memberName: medication.memberName,
     href: `/medications#medication-${medication.id}`,
@@ -590,6 +607,7 @@ function buildSearchItems(
       medication.name,
       medication.dosage,
       medication.intakeTime,
+      medication.intakeTimes?.join(" "),
       medication.schedule,
       medication.startDate,
       medication.endDate,

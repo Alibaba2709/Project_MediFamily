@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowLeft, Pill } from "lucide-react";
+import { ArrowLeft, CalendarCheck, Clock3, Pill } from "lucide-react";
 import { connectMongo } from "@/app/lib/mongodb";
 import { requireVerifiedUser } from "@/app/lib/auth";
 import {
@@ -7,10 +7,18 @@ import {
   getFamilyMembers,
   normalizeFamilyMemberNames,
 } from "@/app/lib/family";
+import {
+  getMedicationTimes,
+  isMedicationDueOnDate,
+  medicationTimeSortValue,
+  todayDateKey,
+} from "@/app/lib/medications";
 import { Medication } from "@/app/models/Medication";
+import { MedicationIntake } from "@/app/models/MedicationIntake";
 import { MedicationForm } from "@/app/components/MedicationForm";
-import { DeleteButton } from "@/app/components/DeleteButton";
 import { MemberAvatar } from "@/app/components/MemberAvatar";
+import { TherapyDoseActions } from "@/app/components/TherapyDoseActions";
+import { MedicationArchive } from "@/app/components/MedicationArchive";
 
 type StoredMedication = {
   _id: { toString: () => string };
@@ -18,6 +26,9 @@ type StoredMedication = {
   name: string;
   dosage?: string;
   intakeTime?: string;
+  intakeTimes?: string[];
+  frequency?: string;
+  weekdays?: number[];
   schedule?: string;
   startDate?: Date;
   endDate?: Date;
@@ -39,6 +50,9 @@ async function getMedications(familyId: string) {
       name: medication.name,
       dosage: medication.dosage,
       intakeTime: medication.intakeTime,
+      intakeTimes: medication.intakeTimes ?? [],
+      frequency: medication.frequency ?? "daily",
+      weekdays: medication.weekdays ?? [],
       schedule: medication.schedule,
       startDate: medication.startDate?.toISOString(),
       endDate: medication.endDate?.toISOString(),
@@ -50,8 +64,56 @@ async function getMedications(familyId: string) {
   }
 }
 
-function medicationTimeSortValue(value?: string) {
-  return value || "99:99";
+type StoredIntake = {
+  medicationId: { toString: () => string };
+  intakeTime: string;
+  status: "taken" | "skipped";
+};
+
+type StoredRecentIntake = StoredIntake & {
+  intakeDate: string;
+  medicationName: string;
+  memberName: string;
+};
+
+async function getTodayIntakes(familyId: string, intakeDate: string) {
+  try {
+    await connectMongo();
+
+    const intakes = await MedicationIntake.find({ familyId, intakeDate }).lean<
+      StoredIntake[]
+    >();
+
+    return intakes.map((intake) => ({
+      medicationId: intake.medicationId.toString(),
+      intakeTime: intake.intakeTime,
+      status: intake.status,
+    }));
+  } catch {
+    return [];
+  }
+}
+
+async function getRecentIntakes(familyId: string) {
+  try {
+    await connectMongo();
+
+    const intakes = await MedicationIntake.find({ familyId })
+      .sort({ intakeDate: -1, intakeTime: -1 })
+      .limit(12)
+      .lean<StoredRecentIntake[]>();
+
+    return intakes.map((intake) => ({
+      intakeDate: intake.intakeDate,
+      intakeTime: intake.intakeTime,
+      medicationId: intake.medicationId.toString(),
+      medicationName: intake.medicationName,
+      memberName: intake.memberName,
+      status: intake.status,
+    }));
+  } catch {
+    return [];
+  }
 }
 
 function formatDate(value?: string) {
@@ -64,6 +126,69 @@ function formatDate(value?: string) {
 }
 
 type MedicationItem = Awaited<ReturnType<typeof getMedications>>[number];
+type IntakeItem = Awaited<ReturnType<typeof getTodayIntakes>>[number];
+
+function getDoseStatusLabel(
+  time: string,
+  status?: "taken" | "skipped"
+) {
+  if (status === "taken") return "Preso";
+  if (status === "skipped") return "Saltato";
+
+  const [hours, minutes] = time.split(":").map(Number);
+  const doseDate = new Date();
+  doseDate.setHours(hours, minutes, 0, 0);
+
+  return doseDate < new Date() ? "Da confermare" : "Programmato";
+}
+
+function getDoseStatusTone(statusLabel: string) {
+  const tones: Record<string, string> = {
+    "Da confermare": "bg-[#fff8e9] text-[#7a5b2f]",
+    Preso: "bg-[#d9eadf] text-[#315a45]",
+    Programmato: "bg-[#f6fbf7] text-[#315a45]",
+    Saltato: "bg-[#fff7f5] text-[#8a564c]",
+  };
+
+  return tones[statusLabel] ?? tones.Programmato;
+}
+
+function buildTodayTherapies(
+  medications: MedicationItem[],
+  intakes: IntakeItem[],
+  today: Date
+) {
+  const intakeStatusByDose = new Map(
+    intakes.map((intake) => [
+      `${intake.medicationId}:${intake.intakeTime}`,
+      intake.status,
+    ])
+  );
+
+  return medications
+    .filter((medication) => isMedicationDueOnDate(medication, today))
+    .flatMap((medication) =>
+      getMedicationTimes(medication).map((time) => {
+        const status = intakeStatusByDose.get(`${medication.id}:${time}`);
+
+        return {
+          dosage: medication.dosage,
+          intakeTime: time,
+          medicationId: medication.id,
+          memberName: medication.memberName,
+          name: medication.name,
+          notes: medication.notes,
+          status,
+          statusLabel: getDoseStatusLabel(time, status),
+        };
+      })
+    )
+    .sort((a, b) =>
+      medicationTimeSortValue(a.intakeTime).localeCompare(
+        medicationTimeSortValue(b.intakeTime)
+      )
+    );
+}
 
 function groupMedicationsByMember(
   medications: MedicationItem[],
@@ -113,10 +238,22 @@ export default async function MedicationsPage() {
   const canEdit = user.role !== "viewer";
   const members = await getFamilyMembers(user);
   const medications = await getMedications(user.familyId);
+  const today = new Date();
+  const intakeDate = todayDateKey(today);
+  const intakes = await getTodayIntakes(user.familyId, intakeDate);
+  const recentIntakes = await getRecentIntakes(user.familyId);
   const visibleMedications = medications.map((medication) => ({
     ...medication,
     memberName: displayFamilyMemberName(medication.memberName, members),
   }));
+  const todayTherapies = buildTodayTherapies(
+    visibleMedications,
+    intakes,
+    today
+  );
+  const todayMedicationIds = Array.from(
+    new Set(todayTherapies.map((therapy) => therapy.medicationId))
+  );
   const memberNames = normalizeFamilyMemberNames(
     [
       ...members.map((member) => member.name),
@@ -128,6 +265,14 @@ export default async function MedicationsPage() {
     visibleMedications,
     members
   );
+  const todayTherapiesByMember = members
+    .map((member) => ({
+      ...member,
+      therapies: todayTherapies.filter(
+        (therapy) => therapy.memberName === member.name
+      ),
+    }))
+    .filter((group) => group.therapies.length > 0);
 
   return (
     <main className="min-h-screen bg-[#fffaf6] px-5 py-6 text-[#2f3330] sm:px-8">
@@ -153,101 +298,159 @@ export default async function MedicationsPage() {
                 Archivio salute
               </p>
               <h1 className="mt-1 text-3xl font-semibold text-[#29302d]">
-                Farmaci
+                Terapie
               </h1>
               <p className="mt-3 max-w-2xl text-sm leading-6 text-[#6c5f57]">
-                Inserisci farmaci attivi, dosaggi e orari.
+                Segui le terapie giornaliere, gli orari e lo storico delle
+                assunzioni.
               </p>
             </div>
           </div>
         </section>
 
-        {visibleMedications.length > 0 ? (
-          <section className="grid gap-4">
-            {medicationGroups.map((group) => (
-              <div
-                className="rounded-lg border border-[#eadfd7] bg-[#fffdfb] p-4 shadow-sm"
-                key={group.name}
-              >
-                <div className="mb-3 flex items-center justify-between gap-3">
-                  <div className="flex items-center gap-3">
+        <section className="rounded-lg border border-[#eadfd7] bg-white p-5 shadow-sm">
+          <div className="mb-4 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="flex size-10 items-center justify-center rounded-lg bg-[#f6fbf7] text-[#315a45]">
+                <CalendarCheck size={20} aria-hidden="true" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-[#947b6a]">
+                  Terapie di oggi
+                </p>
+                <h2 className="text-lg font-semibold text-[#29302d]">
+                  {formatDate(intakeDate)}
+                </h2>
+              </div>
+            </div>
+            <span className="rounded-md bg-[#f6fbf7] px-2 py-1 text-xs font-semibold text-[#315a45]">
+              {todayTherapies.length === 1
+                ? "1 dose"
+                : `${todayTherapies.length} dosi`}
+            </span>
+          </div>
+
+          {todayTherapiesByMember.length > 0 ? (
+            <div className="grid gap-4">
+              {todayTherapiesByMember.map((group) => (
+                <div
+                  className="rounded-lg border border-[#eadfd7] bg-[#fffdfb] p-4"
+                  key={group.name}
+                >
+                  <div className="mb-3 flex items-center gap-3">
                     <MemberAvatar
                       imageDataUrl={group.imageDataUrl}
                       name={group.name}
                       tone={group.tone}
                     />
                     <div>
-                      <h2 className="text-sm font-semibold text-[#29302d]">
+                      <h3 className="text-sm font-semibold text-[#29302d]">
                         {group.name}
-                      </h2>
+                      </h3>
                       <p className="text-xs text-[#7a6f68]">{group.role}</p>
                     </div>
                   </div>
-                  <span className="rounded-md bg-[#f6fbf7] px-2 py-1 text-xs font-semibold text-[#315a45]">
-                    {group.medications.length === 1
-                      ? "1 farmaco"
-                      : `${group.medications.length} farmaci`}
+                  <div className="grid gap-3">
+                    {group.therapies.map((therapy) => (
+                      <article
+                        className="rounded-lg border border-[#eadfd7] bg-white p-4"
+                        key={`${therapy.medicationId}-${therapy.intakeTime}`}
+                      >
+                        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                          <div className="min-w-0">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <span className="inline-flex items-center gap-1 rounded-md bg-[#f6fbf7] px-2 py-1 text-xs font-semibold text-[#315a45]">
+                                <Clock3 size={14} aria-hidden="true" />
+                                {therapy.intakeTime}
+                              </span>
+                              <span
+                                className={`rounded-md px-2 py-1 text-xs font-semibold ${getDoseStatusTone(
+                                  therapy.statusLabel
+                                )}`}
+                              >
+                                {therapy.statusLabel}
+                              </span>
+                            </div>
+                            <h4 className="mt-2 font-semibold text-[#29302d]">
+                              {therapy.name}
+                            </h4>
+                            <p className="mt-1 text-sm text-[#6c5f57]">
+                              {therapy.dosage || "Dosaggio non impostato"}
+                            </p>
+                            {therapy.notes ? (
+                              <p className="mt-1 text-sm text-[#6c5f57]">
+                                {therapy.notes}
+                              </p>
+                            ) : null}
+                          </div>
+                          <TherapyDoseActions
+                            canEdit={canEdit}
+                            intakeDate={intakeDate}
+                            intakeTime={therapy.intakeTime}
+                            medicationId={therapy.medicationId}
+                            status={therapy.status}
+                          />
+                        </div>
+                      </article>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="rounded-lg border border-dashed border-[#d9cfc6] bg-[#fffdfb] px-4 py-5 text-sm text-[#6c5f57]">
+              Nessuna terapia programmata per oggi.
+            </p>
+          )}
+        </section>
+
+        {recentIntakes.length > 0 ? (
+          <section className="rounded-lg border border-[#eadfd7] bg-white p-5 shadow-sm">
+            <div className="mb-3 flex items-center justify-between gap-3">
+              <div>
+                <p className="text-sm font-medium text-[#947b6a]">
+                  Storico terapie
+                </p>
+                <h2 className="text-lg font-semibold text-[#29302d]">
+                  Ultime assunzioni registrate
+                </h2>
+              </div>
+            </div>
+            <div className="grid gap-2">
+              {recentIntakes.map((intake) => (
+                <div
+                  className="flex flex-col gap-2 rounded-lg border border-[#eadfd7] bg-[#fffdfb] px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
+                  key={`${intake.medicationId}-${intake.intakeDate}-${intake.intakeTime}`}
+                >
+                  <div>
+                    <p className="text-sm font-semibold text-[#29302d]">
+                      {displayFamilyMemberName(intake.memberName, members)} ·{" "}
+                      {intake.medicationName}
+                    </p>
+                    <p className="mt-1 text-xs text-[#7a6f68]">
+                      {formatDate(intake.intakeDate)} · {intake.intakeTime}
+                    </p>
+                  </div>
+                  <span
+                    className={`w-fit rounded-md px-2 py-1 text-xs font-semibold ${getDoseStatusTone(
+                      intake.status === "taken" ? "Preso" : "Saltato"
+                    )}`}
+                  >
+                    {intake.status === "taken" ? "Preso" : "Saltato"}
                   </span>
                 </div>
-
-                <div className="grid gap-3">
-                  {group.medications.map((medication) => (
-                    <article
-                      className="medication-card scroll-mt-24 rounded-lg border border-[#eadfd7] bg-white p-4 transition"
-                      id={`medication-${medication.id}`}
-                      key={medication.id}
-                    >
-                      <div className="flex flex-wrap items-center gap-2">
-                        <h3 className="font-semibold text-[#29302d]">
-                          {medication.name}
-                        </h3>
-                        <span className="rounded-md bg-[#f6fbf7] px-2 py-1 text-xs font-semibold text-[#315a45]">
-                          {medication.active ? "Attivo" : "Sospeso"}
-                        </span>
-                      </div>
-                      <p className="mt-1 text-sm text-[#6c5f57]">
-                        {medication.dosage || "Dosaggio non impostato"}
-                      </p>
-                      <p className="mt-3 text-sm text-[#6c5f57]">
-                        Orario: {medication.intakeTime || "Non impostato"}
-                      </p>
-                      {medication.schedule ? (
-                        <p className="mt-1 text-sm text-[#6c5f57]">
-                          Indicazioni salvate: {medication.schedule}
-                        </p>
-                      ) : null}
-                      <p className="mt-1 text-sm text-[#6c5f57]">
-                        Inizio terapia: {formatDate(medication.startDate)}
-                      </p>
-                      <p className="mt-1 text-sm text-[#6c5f57]">
-                        Fine terapia: {formatDate(medication.endDate)}
-                      </p>
-                      {medication.notes ? (
-                        <p className="mt-2 text-sm leading-6 text-[#6c5f57]">
-                          {medication.notes}
-                        </p>
-                      ) : null}
-                      <div className="mt-4 flex flex-wrap gap-2">
-                        {canEdit ? (
-                          <>
-                            <MedicationForm
-                              mode="edit"
-                              medication={medication}
-                              familyMembers={memberNames}
-                            />
-                            <DeleteButton
-                              endpoint={`/api/medications/${medication.id}`}
-                              label={medication.name}
-                            />
-                          </>
-                        ) : null}
-                      </div>
-                    </article>
-                  ))}
-                </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </section>
+        ) : null}
+
+        {visibleMedications.length > 0 ? (
+          <MedicationArchive
+            canEdit={canEdit}
+            groups={medicationGroups}
+            memberNames={memberNames}
+            todayMedicationIds={todayMedicationIds}
+          />
         ) : (
           <section className="rounded-lg border border-dashed border-[#d9cfc6] bg-white p-6 text-center shadow-sm">
             <Pill size={28} className="mx-auto text-[#947b6a]" aria-hidden="true" />

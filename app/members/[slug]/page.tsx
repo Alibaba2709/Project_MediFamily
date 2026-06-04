@@ -11,6 +11,10 @@ import {
 import { connectMongo } from "@/app/lib/mongodb";
 import { requireVerifiedUser } from "@/app/lib/auth";
 import { getFamilyMembers, memberSlug } from "@/app/lib/family";
+import {
+  getMedicationTimes,
+  medicationTimeSortValue,
+} from "@/app/lib/medications";
 import { Visit } from "@/app/models/Visit";
 import { Recipe } from "@/app/models/Recipe";
 import { Medication } from "@/app/models/Medication";
@@ -39,10 +43,6 @@ function formatMoney(value?: number) {
     currency: "EUR",
     style: "currency",
   }).format(value);
-}
-
-function medicationTimeSortValue(value?: string) {
-  return value || "99:99";
 }
 
 export default async function MemberPage(context: RouteContext) {
@@ -78,8 +78,8 @@ export default async function MemberPage(context: RouteContext) {
       .select("-fileData"),
   ]);
   const sortedMedications = [...medications].sort((a, b) =>
-    medicationTimeSortValue(a.intakeTime).localeCompare(
-      medicationTimeSortValue(b.intakeTime)
+    medicationTimeSortValue(getMedicationTimes(a)[0]).localeCompare(
+      medicationTimeSortValue(getMedicationTimes(b)[0])
     )
   );
   const timeline = [
@@ -106,8 +106,8 @@ export default async function MemberPage(context: RouteContext) {
       type: "Farmaco",
       title: String(medication.name),
       detail: [
-        medication.intakeTime
-          ? `Orario: ${medication.intakeTime}`
+        getMedicationTimes(medication).length
+          ? `Orari: ${getMedicationTimes(medication).join(", ")}`
           : "Orario non impostato",
         medication.schedule ? `Indicazioni: ${medication.schedule}` : "",
         medication.endDate ? `Fine: ${formatDate(medication.endDate)}` : "",
@@ -222,7 +222,9 @@ export default async function MemberPage(context: RouteContext) {
                     {medication.dosage || "dosaggio non impostato"}
                   </p>
                   <p className="mt-1 text-xs text-[#7a6f68]">
-                    Orario: {medication.intakeTime || "Non impostato"}
+                    Orari:{" "}
+                    {getMedicationTimes(medication).join(", ") ||
+                      "Non impostati"}
                   </p>
                   <p className="mt-1 text-xs text-[#7a6f68]">
                     Fine terapia: {formatDate(medication.endDate)}

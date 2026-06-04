@@ -3,7 +3,18 @@ import mongoose from "mongoose";
 import { connectMongo } from "@/app/lib/mongodb";
 import { getCurrentUser } from "@/app/lib/auth";
 import { canEditHealth, forbidden } from "@/app/lib/permissions";
+import {
+  normalizeIntakeTimes,
+  normalizeWeekdays,
+} from "@/app/lib/medications";
 import { Medication } from "@/app/models/Medication";
+
+const frequencies = ["daily", "specific_days", "as_needed"];
+
+function normalizeFrequency(value: unknown) {
+  const frequency = String(value ?? "daily");
+  return frequencies.includes(frequency) ? frequency : "daily";
+}
 
 type RouteContext = {
   params: Promise<{
@@ -34,6 +45,8 @@ export async function PATCH(request: Request, context: RouteContext) {
   const body = await request.json();
   const name = String(body.name ?? "").trim();
   const memberName = String(body.memberName ?? "").trim();
+  const intakeTimes = normalizeIntakeTimes(body.intakeTimes, body.intakeTime);
+  const frequency = normalizeFrequency(body.frequency);
 
   if (!name || !memberName) {
     return NextResponse.json(
@@ -47,6 +60,9 @@ export async function PATCH(request: Request, context: RouteContext) {
     memberName,
     name,
     active: body.active ?? true,
+    frequency,
+    weekdays:
+      frequency === "specific_days" ? normalizeWeekdays(body.weekdays) : [],
   };
   const unsetFields: Record<string, ""> = {};
   const setOptionalField = (field: string, value: unknown) => {
@@ -61,10 +77,17 @@ export async function PATCH(request: Request, context: RouteContext) {
   };
 
   setOptionalField("dosage", body.dosage);
-  setOptionalField("intakeTime", body.intakeTime);
   setOptionalField("startDate", body.startDate);
   setOptionalField("endDate", body.endDate);
   setOptionalField("notes", body.notes);
+
+  if (intakeTimes.length > 0) {
+    setFields.intakeTimes = intakeTimes;
+    setFields.intakeTime = intakeTimes[0];
+  } else {
+    unsetFields.intakeTimes = "";
+    unsetFields.intakeTime = "";
+  }
 
   if ("schedule" in body) {
     setOptionalField("schedule", body.schedule);

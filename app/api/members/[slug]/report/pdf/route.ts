@@ -2,6 +2,10 @@ import { NextResponse } from "next/server";
 import { connectMongo } from "@/app/lib/mongodb";
 import { getCurrentUser } from "@/app/lib/auth";
 import { getFamilyMembers, memberSlug } from "@/app/lib/family";
+import {
+  getMedicationTimes,
+  medicationTimeSortValue,
+} from "@/app/lib/medications";
 import { Visit } from "@/app/models/Visit";
 import { Recipe } from "@/app/models/Recipe";
 import { Medication } from "@/app/models/Medication";
@@ -30,10 +34,6 @@ function formatMoney(value?: number) {
     currency: "EUR",
     style: "currency",
   }).format(value);
-}
-
-function medicationTimeSortValue(value?: string) {
-  return value || "99:99";
 }
 
 function pdfEscape(value: string) {
@@ -164,8 +164,8 @@ export async function GET(_request: Request, context: RouteContext) {
       .select("-fileData"),
   ]);
   const sortedMedications = [...medications].sort((a, b) =>
-    medicationTimeSortValue(a.intakeTime).localeCompare(
-      medicationTimeSortValue(b.intakeTime)
+    medicationTimeSortValue(getMedicationTimes(a)[0]).localeCompare(
+      medicationTimeSortValue(getMedicationTimes(b)[0])
     )
   );
 
@@ -196,7 +196,8 @@ export async function GET(_request: Request, context: RouteContext) {
           [
             medication.name,
             medication.dosage || "dosaggio non impostato",
-            medication.intakeTime || "orario non impostato",
+            getMedicationTimes(medication).join(", ") ||
+              "orario non impostato",
             `fine terapia: ${formatDate(medication.endDate)}`,
           ].join(" - "),
           medication.notes ? `Note: ${medication.notes}` : "",

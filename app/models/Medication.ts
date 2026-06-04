@@ -7,6 +7,13 @@ const MedicationSchema = new Schema(
     name: { type: String, required: true },
     dosage: { type: String },
     intakeTime: { type: String },
+    intakeTimes: [{ type: String }],
+    frequency: {
+      type: String,
+      enum: ["daily", "specific_days", "as_needed"],
+      default: "daily",
+    },
+    weekdays: [{ type: Number }],
     schedule: { type: String },
     startDate: { type: Date },
     endDate: { type: Date },

@@ -2,7 +2,18 @@ import { NextResponse } from "next/server";
 import { connectMongo } from "@/app/lib/mongodb";
 import { getCurrentUser } from "@/app/lib/auth";
 import { canEditHealth, forbidden } from "@/app/lib/permissions";
+import {
+  normalizeIntakeTimes,
+  normalizeWeekdays,
+} from "@/app/lib/medications";
 import { Medication } from "@/app/models/Medication";
+
+const frequencies = ["daily", "specific_days", "as_needed"];
+
+function normalizeFrequency(value: unknown) {
+  const frequency = String(value ?? "daily");
+  return frequencies.includes(frequency) ? frequency : "daily";
+}
 
 export async function GET() {
   const user = await getCurrentUser();
@@ -36,6 +47,8 @@ export async function POST(request: Request) {
   const body = await request.json();
   const name = String(body.name ?? "").trim();
   const memberName = String(body.memberName ?? "").trim();
+  const intakeTimes = normalizeIntakeTimes(body.intakeTimes, body.intakeTime);
+  const frequency = normalizeFrequency(body.frequency);
 
   if (!name || !memberName) {
     return NextResponse.json(
@@ -49,7 +62,11 @@ export async function POST(request: Request) {
     memberName,
     name,
     dosage: body.dosage ? String(body.dosage).trim() : undefined,
-    intakeTime: body.intakeTime ? String(body.intakeTime).trim() : undefined,
+    intakeTime: intakeTimes[0],
+    intakeTimes,
+    frequency,
+    weekdays:
+      frequency === "specific_days" ? normalizeWeekdays(body.weekdays) : [],
     schedule: body.schedule ? String(body.schedule).trim() : undefined,
     startDate: body.startDate || undefined,
     endDate: body.endDate || undefined,

@@ -3,6 +3,10 @@ import { ArrowLeft } from "lucide-react";
 import { connectMongo } from "@/app/lib/mongodb";
 import { requireVerifiedUser } from "@/app/lib/auth";
 import { getFamilyMembers, memberSlug } from "@/app/lib/family";
+import {
+  getMedicationTimes,
+  medicationTimeSortValue,
+} from "@/app/lib/medications";
 import { Visit } from "@/app/models/Visit";
 import { Recipe } from "@/app/models/Recipe";
 import { Medication } from "@/app/models/Medication";
@@ -32,10 +36,6 @@ function formatMoney(value?: number) {
     currency: "EUR",
     style: "currency",
   }).format(value);
-}
-
-function medicationTimeSortValue(value?: string) {
-  return value || "99:99";
 }
 
 export default async function MemberReportPage(context: RouteContext) {
@@ -69,8 +69,8 @@ export default async function MemberReportPage(context: RouteContext) {
       .select("-fileData"),
   ]);
   const sortedMedications = [...medications].sort((a, b) =>
-    medicationTimeSortValue(a.intakeTime).localeCompare(
-      medicationTimeSortValue(b.intakeTime)
+    medicationTimeSortValue(getMedicationTimes(a)[0]).localeCompare(
+      medicationTimeSortValue(getMedicationTimes(b)[0])
     )
   );
 
@@ -137,7 +137,8 @@ export default async function MemberReportPage(context: RouteContext) {
             sortedMedications.map((medication) => (
               <ReportItem
                 detail={`${medication.dosage || "dosaggio non impostato"} · ${
-                  medication.intakeTime || "orario non impostato"
+                  getMedicationTimes(medication).join(", ") ||
+                  "orario non impostato"
                 } · Fine terapia: ${formatDate(medication.endDate)}`}
                 key={String(medication._id)}
                 note={medication.notes}

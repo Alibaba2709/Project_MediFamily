@@ -2,7 +2,8 @@
 
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2, PenLine, Pill, Plus, X } from "lucide-react";
+import { Clock, Loader2, PenLine, Pill, Plus, X } from "lucide-react";
+import { weekdayOptions } from "@/app/lib/medications";
 
 const fallbackFamilyMembers = ["Utente principale"];
 
@@ -10,7 +11,9 @@ const initialForm = {
   memberName: fallbackFamilyMembers[0],
   name: "",
   dosage: "",
-  intakeTime: "",
+  intakeTimes: [""],
+  frequency: "daily",
+  weekdays: [] as number[],
   startDate: "",
   endDate: "",
   active: "true",
@@ -23,6 +26,9 @@ type EditableMedication = {
   name: string;
   dosage?: string;
   intakeTime?: string;
+  intakeTimes?: string[];
+  frequency?: string;
+  weekdays?: number[];
   schedule?: string;
   startDate?: string;
   endDate?: string;
@@ -57,7 +63,12 @@ function buildInitialForm(
     memberName: medication.memberName || defaultMember,
     name: medication.name,
     dosage: medication.dosage ?? "",
-    intakeTime: medication.intakeTime ?? "",
+    intakeTimes:
+      medication.intakeTimes?.length
+        ? medication.intakeTimes
+        : [medication.intakeTime ?? ""],
+    frequency: medication.frequency ?? "daily",
+    weekdays: medication.weekdays ?? [],
     startDate: toDateInput(medication.startDate),
     endDate: toDateInput(medication.endDate),
     active: medication.active ? "true" : "false",
@@ -78,6 +89,7 @@ export function MedicationForm({
   const [error, setError] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const isEditing = mode === "edit";
+  const showWeekdays = form.frequency === "specific_days";
 
   function openForm() {
     setForm(buildInitialForm(medication, familyMembers));
@@ -106,7 +118,8 @@ export function MedicationForm({
           ...form,
           startDate: form.startDate || undefined,
           endDate: form.endDate || undefined,
-          intakeTime: form.intakeTime || undefined,
+          intakeTimes: form.intakeTimes.filter(Boolean),
+          weekdays: showWeekdays ? form.weekdays : [],
           active: form.active === "true",
         }),
       }
@@ -125,6 +138,45 @@ export function MedicationForm({
     setForm(buildInitialForm(medication, familyMembers));
     setIsOpen(false);
     router.refresh();
+  }
+
+  function updateIntakeTime(index: number, value: string) {
+    setForm((current) => ({
+      ...current,
+      intakeTimes: current.intakeTimes.map((time, currentIndex) =>
+        currentIndex === index ? value : time
+      ),
+    }));
+  }
+
+  function addIntakeTime() {
+    setForm((current) => ({
+      ...current,
+      intakeTimes: [...current.intakeTimes, ""],
+    }));
+  }
+
+  function removeIntakeTime(index: number) {
+    setForm((current) => ({
+      ...current,
+      intakeTimes:
+        current.intakeTimes.length > 1
+          ? current.intakeTimes.filter((_, currentIndex) => currentIndex !== index)
+          : [""],
+    }));
+  }
+
+  function toggleWeekday(day: number) {
+    setForm((current) => {
+      const weekdays = current.weekdays.includes(day)
+        ? current.weekdays.filter((item) => item !== day)
+        : [...current.weekdays, day];
+
+      return {
+        ...current,
+        weekdays,
+      };
+    });
   }
 
   return (
@@ -291,19 +343,90 @@ export function MedicationForm({
                   <span className="text-sm font-semibold text-[#4f5c55]">
                     Orario assunzione
                   </span>
-                  <input
+                  <div className="space-y-2">
+                    {form.intakeTimes.map((time, index) => (
+                      <div className="flex gap-2" key={index}>
+                        <input
+                          className="h-11 min-w-0 flex-1 rounded-md border border-[#ded4cb] bg-white px-3 text-sm outline-none focus:border-[#789888] focus:ring-2 focus:ring-[#d9eadf]"
+                          type="time"
+                          value={time}
+                          onChange={(event) =>
+                            updateIntakeTime(index, event.target.value)
+                          }
+                        />
+                        <button
+                          aria-label="Rimuovi orario"
+                          className="flex size-11 shrink-0 items-center justify-center rounded-md border border-[#edc9c3] bg-[#fff7f5] text-[#8a564c] transition hover:bg-[#fdecea]"
+                          onClick={() => removeIntakeTime(index)}
+                          type="button"
+                        >
+                          <X size={17} aria-hidden="true" />
+                        </button>
+                      </div>
+                    ))}
+                    <button
+                      className="inline-flex h-10 items-center gap-2 rounded-md border border-[#d5e0d8] bg-[#f6fbf7] px-3 text-sm font-semibold text-[#315a45] transition hover:bg-[#edf6ef]"
+                      onClick={addIntakeTime}
+                      type="button"
+                    >
+                      <Plus size={16} aria-hidden="true" />
+                      Aggiungi orario
+                    </button>
+                  </div>
+                </label>
+
+                <label className="space-y-2">
+                  <span className="text-sm font-semibold text-[#4f5c55]">
+                    Frequenza
+                  </span>
+                  <select
                     className="h-11 w-full rounded-md border border-[#ded4cb] bg-white px-3 text-sm outline-none focus:border-[#789888] focus:ring-2 focus:ring-[#d9eadf]"
-                    type="time"
-                    value={form.intakeTime}
+                    value={form.frequency}
                     onChange={(event) =>
                       setForm((current) => ({
                         ...current,
-                        intakeTime: event.target.value,
+                        frequency: event.target.value,
+                        weekdays:
+                          event.target.value === "specific_days"
+                            ? current.weekdays
+                            : [],
                       }))
                     }
-                  />
+                  >
+                    <option value="daily">Tutti i giorni</option>
+                    <option value="specific_days">Giorni specifici</option>
+                    <option value="as_needed">Al bisogno</option>
+                  </select>
                 </label>
               </div>
+
+              {showWeekdays ? (
+                <div className="space-y-2">
+                  <span className="text-sm font-semibold text-[#4f5c55]">
+                    Giorni terapia
+                  </span>
+                  <div className="grid grid-cols-4 gap-2 sm:grid-cols-7">
+                    {weekdayOptions.map((day) => {
+                      const selected = form.weekdays.includes(day.value);
+
+                      return (
+                        <button
+                          className={
+                            selected
+                              ? "h-10 rounded-md bg-[#315a45] text-sm font-semibold text-white"
+                              : "h-10 rounded-md border border-[#ded4cb] bg-white text-sm font-semibold text-[#4f5c55]"
+                          }
+                          key={day.value}
+                          onClick={() => toggleWeekday(day.value)}
+                          type="button"
+                        >
+                          {day.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              ) : null}
 
               <label className="block space-y-2">
                 <span className="text-sm font-semibold text-[#4f5c55]">
@@ -344,7 +467,7 @@ export function MedicationForm({
                   {isSaving ? (
                     <Loader2 className="animate-spin" size={17} aria-hidden="true" />
                   ) : (
-                    <Plus size={17} aria-hidden="true" />
+                    <Clock size={17} aria-hidden="true" />
                   )}
                   {isEditing ? "Aggiorna farmaco" : "Salva farmaco"}
                 </button>
