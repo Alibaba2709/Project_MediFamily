@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { Trash2 } from "lucide-react";
 import { FamilyMember } from "@/app/lib/family";
 import { AddFamilyMemberForm } from "@/app/components/AddFamilyMemberForm";
+import { MemberAvatar } from "@/app/components/MemberAvatar";
+import { ProfileImageControl } from "@/app/components/ProfileImageControl";
 
 const FREE_MEMBER_LIMIT = 6;
 
@@ -59,15 +61,15 @@ export function FamilyMembersManager({
       <div className="space-y-2">
         {members.map((member) => (
           <div
-            className="flex items-center justify-between gap-3 rounded-md bg-[#fffaf6] p-2"
+            className="flex flex-col gap-3 rounded-md bg-[#fffaf6] p-2 sm:flex-row sm:items-center sm:justify-between"
             key={member.name}
           >
             <span className="flex min-w-0 items-center gap-3">
-              <span
-                className={`flex size-9 shrink-0 items-center justify-center rounded-lg ${member.tone} text-sm font-semibold text-[#313a35]`}
-              >
-                {member.name.slice(0, 1)}
-              </span>
+              <MemberAvatar
+                imageDataUrl={member.imageDataUrl}
+                name={member.name}
+                tone={member.tone}
+              />
               <span className="min-w-0">
                 <span className="block truncate text-sm font-semibold text-[#29302d]">
                   {member.name}
@@ -77,15 +79,22 @@ export function FamilyMembersManager({
                 </span>
               </span>
             </span>
-            <button
-              aria-label={`Rimuovi ${member.name}`}
-              className="flex size-8 shrink-0 items-center justify-center rounded-md text-[#9f4d46] transition hover:bg-[#fdece8] disabled:cursor-not-allowed disabled:opacity-35"
-              disabled={member.name === currentUserName}
-              onClick={() => removeMember(member.name)}
-              type="button"
-            >
-              <Trash2 size={16} aria-hidden="true" />
-            </button>
+            <div className="flex items-center justify-between gap-2 sm:justify-end">
+              <ProfileImageControl
+                compact
+                hasImage={Boolean(member.imageDataUrl)}
+                memberName={member.name}
+              />
+              <button
+                aria-label={`Rimuovi ${member.name}`}
+                className="flex size-8 shrink-0 items-center justify-center rounded-md text-[#9f4d46] transition hover:bg-[#fdece8] disabled:cursor-not-allowed disabled:opacity-35"
+                disabled={member.name === currentUserName}
+                onClick={() => removeMember(member.name)}
+                type="button"
+              >
+                <Trash2 size={16} aria-hidden="true" />
+              </button>
+            </div>
           </div>
         ))}
       </div>

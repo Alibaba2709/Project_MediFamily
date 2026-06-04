@@ -4,6 +4,7 @@ const FamilyMemberSchema = new Schema(
   {
     name: { type: String, required: true },
     role: { type: String, required: true },
+    imageDataUrl: { type: String },
   },
   { _id: false }
 );

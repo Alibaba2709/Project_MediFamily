@@ -6,6 +6,7 @@ export type FamilyMember = {
   name: string;
   role: string;
   tone: string;
+  imageDataUrl?: string;
 };
 
 export type FamilyBookingSettings = {
@@ -42,6 +43,7 @@ type StoredFamily = {
   members?: Array<{
     name?: string;
     role?: string;
+    imageDataUrl?: string;
   }>;
   bookingRegion?: string;
   bookingPortalName?: string;
@@ -61,6 +63,7 @@ export async function getFamilyMembers(user: CurrentUser): Promise<FamilyMember[
       name: String(member.name ?? "").trim(),
       role: String(member.role ?? "Familiare").trim(),
       tone: tones[index % tones.length],
+      imageDataUrl: String(member.imageDataUrl ?? "").trim() || undefined,
     }))
     .filter((member) => member.name);
 

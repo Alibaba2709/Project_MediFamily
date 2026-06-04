@@ -11,6 +11,8 @@ import { FamilyMembersManager } from "@/app/components/FamilyMembersManager";
 import { BookingSettingsForm } from "@/app/components/BookingSettingsForm";
 import { NotificationSettingsForm } from "@/app/components/NotificationSettingsForm";
 import { FamilyAccessManager } from "@/app/components/FamilyAccessManager";
+import { MemberAvatar } from "@/app/components/MemberAvatar";
+import { ProfileImageControl } from "@/app/components/ProfileImageControl";
 import { User } from "@/app/models/User";
 import { FamilyInvite } from "@/app/models/FamilyInvite";
 
@@ -63,6 +65,10 @@ async function getFamilyAccessData(familyId: string) {
 export default async function SettingsPage() {
   const user = await requireVerifiedUser();
   const members = await getFamilyMembers(user);
+  const currentMember =
+    members.find(
+      (member) => member.name.toLowerCase() === user.name.toLowerCase()
+    ) ?? members[0];
   const bookingSettings = await getFamilyBookingSettings(user);
   const notificationSettings = await getFamilyNotificationSettings(user);
   const accessData =
@@ -106,19 +112,32 @@ export default async function SettingsPage() {
             <h2 className="text-sm font-semibold uppercase text-[#7a6f68]">
               Profilo
             </h2>
-            <div className="mt-4 space-y-3 text-sm">
-              <p>
-                <span className="font-semibold text-[#29302d]">Nome:</span>{" "}
-                <span className="text-[#6c5f57]">{user.name}</span>
-              </p>
-              <p>
-                <span className="font-semibold text-[#29302d]">Email:</span>{" "}
-                <span className="text-[#6c5f57]">{user.email}</span>
-              </p>
-              <p>
-                <span className="font-semibold text-[#29302d]">Ruolo:</span>{" "}
-                <span className="text-[#6c5f57]">{user.role}</span>
-              </p>
+            <div className="mt-4 flex items-start gap-3">
+              <MemberAvatar
+                className="size-14"
+                imageDataUrl={currentMember?.imageDataUrl}
+                name={user.name}
+                textClassName="text-lg"
+                tone={currentMember?.tone ?? "bg-[#f9d8d6]"}
+              />
+              <div className="min-w-0 space-y-3 text-sm">
+                <p>
+                  <span className="font-semibold text-[#29302d]">Nome:</span>{" "}
+                  <span className="text-[#6c5f57]">{user.name}</span>
+                </p>
+                <p>
+                  <span className="font-semibold text-[#29302d]">Email:</span>{" "}
+                  <span className="text-[#6c5f57]">{user.email}</span>
+                </p>
+                <p>
+                  <span className="font-semibold text-[#29302d]">Ruolo:</span>{" "}
+                  <span className="text-[#6c5f57]">{user.role}</span>
+                </p>
+                <ProfileImageControl
+                  hasImage={Boolean(currentMember?.imageDataUrl)}
+                  memberName={user.name}
+                />
+              </div>
             </div>
           </article>
 

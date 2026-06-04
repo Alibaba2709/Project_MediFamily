@@ -28,6 +28,7 @@ import { LogoutButton } from "@/app/components/LogoutButton";
 import { AddFamilyMemberForm } from "@/app/components/AddFamilyMemberForm";
 import { CancelVisitButton } from "@/app/components/CancelVisitButton";
 import { GlobalSearch } from "@/app/components/GlobalSearch";
+import { MemberAvatar } from "@/app/components/MemberAvatar";
 import type { SearchItem } from "@/app/components/GlobalSearch";
 import {
   getFamilyBookingSettings,
@@ -675,9 +676,17 @@ export default async function Home() {
           <details className="group rounded-lg border border-[#eadfd7] bg-white p-3 shadow-sm sm:p-4">
             <summary className="flex cursor-pointer list-none items-center justify-between gap-3 [&::-webkit-details-marker]:hidden">
               <span className="flex min-w-0 items-center gap-3">
-                <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-[#f9d8d6] text-sm font-semibold text-[#313a35] sm:size-10">
-                  {user.name.slice(0, 1)}
-                </span>
+                <MemberAvatar
+                  className="size-9 sm:size-10"
+                  imageDataUrl={
+                    members.find(
+                      (member) =>
+                        member.name.toLowerCase() === user.name.toLowerCase()
+                    )?.imageDataUrl
+                  }
+                  name={user.name}
+                  tone="bg-[#f9d8d6]"
+                />
                 <span className="min-w-0">
                   <span className="block text-xs font-semibold uppercase text-[#7a6f68]">
                     Nucleo familiare
@@ -706,11 +715,11 @@ export default async function Home() {
                     href={`/members/${memberSlug(member.name)}`}
                     key={member.name}
                   >
-                    <div
-                      className={`flex size-9 items-center justify-center rounded-lg ${member.tone} text-sm font-semibold text-[#313a35]`}
-                    >
-                      {member.name.slice(0, 1)}
-                    </div>
+                    <MemberAvatar
+                      imageDataUrl={member.imageDataUrl}
+                      name={member.name}
+                      tone={member.tone}
+                    />
                     <div className="min-w-0">
                       <p className="truncate text-sm font-semibold text-[#313a35]">
                         {member.name}
@@ -950,11 +959,12 @@ export default async function Home() {
                   >
                     <div className="mb-2 flex items-center justify-between gap-3 sm:mb-3">
                       <div className="flex items-center gap-3">
-                        <div
-                          className={`flex size-8 items-center justify-center rounded-lg ${group.tone} text-sm font-semibold text-[#313a35] sm:size-9`}
-                        >
-                          {group.name.slice(0, 1)}
-                        </div>
+                        <MemberAvatar
+                          className="size-8 sm:size-9"
+                          imageDataUrl={group.imageDataUrl}
+                          name={group.name}
+                          tone={group.tone}
+                        />
                         <div>
                           <h3 className="text-sm font-semibold text-[#29302d]">
                             {group.name}

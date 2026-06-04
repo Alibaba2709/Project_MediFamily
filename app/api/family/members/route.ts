@@ -57,10 +57,12 @@ export async function POST(request: Request) {
       ? addanteMembers.map((member) => ({
           name: member.name,
           role: member.role,
+          ...(member.imageDataUrl ? { imageDataUrl: member.imageDataUrl } : {}),
         }))
       : currentMembers.map((member) => ({
           name: member.name,
           role: member.role,
+          ...(member.imageDataUrl ? { imageDataUrl: member.imageDataUrl } : {}),
         }));
 
   const nextMembers = [...baseMembers, { name, role }];

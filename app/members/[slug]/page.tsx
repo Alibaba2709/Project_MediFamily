@@ -15,6 +15,7 @@ import { Visit } from "@/app/models/Visit";
 import { Recipe } from "@/app/models/Recipe";
 import { Medication } from "@/app/models/Medication";
 import { HealthDocument } from "@/app/models/HealthDocument";
+import { MemberAvatar } from "@/app/components/MemberAvatar";
 
 type RouteContext = {
   params: Promise<{
@@ -131,11 +132,13 @@ export default async function MemberPage(context: RouteContext) {
         <section className="rounded-lg border border-[#eadfd7] bg-white p-5 shadow-sm">
           <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
             <div className="flex items-center gap-3">
-            <div
-              className={`flex size-12 items-center justify-center rounded-lg ${member.tone} text-lg font-semibold text-[#313a35]`}
-            >
-              {member.name.slice(0, 1)}
-            </div>
+            <MemberAvatar
+              className="size-12"
+              imageDataUrl={member.imageDataUrl}
+              name={member.name}
+              textClassName="text-lg"
+              tone={member.tone}
+            />
             <div>
               <p className="text-sm font-medium text-[#947b6a]">{member.role}</p>
               <h1 className="mt-1 text-3xl font-semibold text-[#29302d]">

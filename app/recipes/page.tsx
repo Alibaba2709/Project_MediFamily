@@ -6,6 +6,7 @@ import { getFamilyMembers } from "@/app/lib/family";
 import { Recipe } from "@/app/models/Recipe";
 import { RecipeForm } from "@/app/components/RecipeForm";
 import { DeleteButton } from "@/app/components/DeleteButton";
+import { MemberAvatar } from "@/app/components/MemberAvatar";
 
 type StoredRecipe = {
   _id: { toString: () => string };
@@ -124,11 +125,11 @@ export default async function RecipesPage() {
               >
                 <div className="mb-3 flex items-center justify-between gap-3">
                   <div className="flex items-center gap-3">
-                    <div
-                      className={`flex size-9 items-center justify-center rounded-lg ${group.tone} text-sm font-semibold text-[#313a35]`}
-                    >
-                      {group.name.slice(0, 1)}
-                    </div>
+                    <MemberAvatar
+                      imageDataUrl={group.imageDataUrl}
+                      name={group.name}
+                      tone={group.tone}
+                    />
                     <div>
                       <h2 className="text-sm font-semibold text-[#29302d]">
                         {group.name}
