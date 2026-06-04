@@ -4,19 +4,30 @@ import { connectMongo } from "@/app/lib/mongodb";
 import { requireVerifiedUser } from "@/app/lib/auth";
 import { getFamilyMembers } from "@/app/lib/family";
 import { HealthDocument } from "@/app/models/HealthDocument";
+import { Visit } from "@/app/models/Visit";
 import { DocumentForm } from "@/app/components/DocumentForm";
 import { DeleteButton } from "@/app/components/DeleteButton";
 
 type StoredDocument = {
   _id: { toString: () => string };
   memberName: string;
+  visitId?: string;
   title: string;
   category: string;
   fileName?: string;
   fileType?: string;
   fileSize?: number;
+  paymentDate?: Date;
+  amount?: number;
   notes?: string;
   createdAt?: Date;
+};
+
+type StoredVisit = {
+  _id: { toString: () => string };
+  memberName: string;
+  title: string;
+  visitDate: Date;
 };
 
 async function getDocuments(familyId: string) {
@@ -31,13 +42,35 @@ async function getDocuments(familyId: string) {
     return documents.map((document) => ({
       id: document._id.toString(),
       memberName: document.memberName,
+      visitId: document.visitId,
       title: document.title,
       category: document.category,
       fileName: document.fileName,
       fileType: document.fileType,
       fileSize: document.fileSize,
+      paymentDate: document.paymentDate?.toISOString(),
+      amount: document.amount,
       notes: document.notes,
       createdAt: document.createdAt?.toISOString(),
+    }));
+  } catch {
+    return [];
+  }
+}
+
+async function getLinkableVisits(familyId: string) {
+  try {
+    await connectMongo();
+
+    const visits = await Visit.find({ familyId })
+      .sort({ visitDate: -1 })
+      .lean<StoredVisit[]>();
+
+    return visits.map((visit) => ({
+      id: visit._id.toString(),
+      memberName: visit.memberName,
+      title: visit.title,
+      visitDate: visit.visitDate.toISOString(),
     }));
   } catch {
     return [];
@@ -50,11 +83,32 @@ function formatBytes(value?: number) {
   return `${(value / 1024 / 1024).toFixed(1)} MB`;
 }
 
+function formatDate(value?: string) {
+  if (!value) return "Non impostata";
+
+  return new Intl.DateTimeFormat("it-IT", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  }).format(new Date(value));
+}
+
+function formatCurrency(value?: number) {
+  if (value === undefined) return "Importo non impostato";
+
+  return new Intl.NumberFormat("it-IT", {
+    currency: "EUR",
+    style: "currency",
+  }).format(value);
+}
+
 export default async function DocumentsPage() {
   const user = await requireVerifiedUser();
   const members = await getFamilyMembers(user);
   const memberNames = members.map((member) => member.name);
   const documents = await getDocuments(user.familyId);
+  const visits = await getLinkableVisits(user.familyId);
+  const visitsById = new Map(visits.map((visit) => [visit.id, visit]));
 
   return (
     <main className="min-h-screen bg-[#fffaf6] px-5 py-6 text-[#2f3330] sm:px-8">
@@ -67,7 +121,7 @@ export default async function DocumentsPage() {
             <ArrowLeft size={17} aria-hidden="true" />
             Dashboard
           </Link>
-          <DocumentForm familyMembers={memberNames} />
+          <DocumentForm familyMembers={memberNames} visits={visits} />
         </div>
 
         <section className="rounded-lg border border-[#eadfd7] bg-white p-5 shadow-sm">
@@ -109,6 +163,17 @@ export default async function DocumentsPage() {
                     <p className="mt-1 text-sm text-[#6c5f57]">
                       {document.memberName}
                     </p>
+                    {document.visitId && visitsById.has(document.visitId) ? (
+                      <p className="mt-2 rounded-md bg-[#f6fbf7] px-3 py-2 text-sm text-[#315a45]">
+                        Collegato a: {visitsById.get(document.visitId)?.title}
+                      </p>
+                    ) : null}
+                    {document.category === "pagamento" ? (
+                      <p className="mt-2 rounded-md bg-[#fff7f5] px-3 py-2 text-sm text-[#7f5146]">
+                        Pagato il {formatDate(document.paymentDate)} ·{" "}
+                        {formatCurrency(document.amount)}
+                      </p>
+                    ) : null}
                     <p className="mt-3 text-sm text-[#6c5f57]">
                       {document.fileName ?? "Solo scheda senza file"} ·{" "}
                       {formatBytes(document.fileSize)}
@@ -124,6 +189,7 @@ export default async function DocumentsPage() {
                       mode="edit"
                       document={document}
                       familyMembers={memberNames}
+                      visits={visits}
                     />
                     {document.fileName ? (
                       <a

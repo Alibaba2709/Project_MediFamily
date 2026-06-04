@@ -21,10 +21,14 @@ import { connectMongo } from "@/app/lib/mongodb";
 import { requireVerifiedUser } from "@/app/lib/auth";
 import { Visit } from "@/app/models/Visit";
 import { Recipe } from "@/app/models/Recipe";
+import { Medication } from "@/app/models/Medication";
+import { HealthDocument } from "@/app/models/HealthDocument";
 import { VisitForm } from "@/app/components/VisitForm";
 import { LogoutButton } from "@/app/components/LogoutButton";
 import { AddFamilyMemberForm } from "@/app/components/AddFamilyMemberForm";
 import { CancelVisitButton } from "@/app/components/CancelVisitButton";
+import { GlobalSearch } from "@/app/components/GlobalSearch";
+import type { SearchItem } from "@/app/components/GlobalSearch";
 import {
   getFamilyBookingSettings,
   getFamilyMembers,
@@ -65,14 +69,76 @@ type DashboardRecipe = {
   id: string;
   memberName: string;
   medicationName: string;
+  recipeCode?: string;
+  doctor?: string;
   renewalDate?: string;
+  notes?: string;
 };
 
 type StoredRecipe = {
   _id: { toString: () => string };
   memberName: string;
   medicationName: string;
+  recipeCode?: string;
+  doctor?: string;
   renewalDate?: Date;
+  notes?: string;
+};
+
+type DashboardMedication = {
+  id: string;
+  memberName: string;
+  name: string;
+  dosage?: string;
+  schedule?: string;
+  startDate?: string;
+  active: boolean;
+  notes?: string;
+};
+
+type StoredMedication = {
+  _id: { toString: () => string };
+  memberName: string;
+  name: string;
+  dosage?: string;
+  schedule?: string;
+  startDate?: Date;
+  active: boolean;
+  notes?: string;
+};
+
+type DashboardDocument = {
+  id: string;
+  memberName: string;
+  visitId?: string;
+  title: string;
+  category: string;
+  fileName?: string;
+  paymentDate?: string;
+  amount?: number;
+  notes?: string;
+  createdAt?: string;
+};
+
+type StoredDocument = {
+  _id: { toString: () => string };
+  memberName: string;
+  visitId?: string;
+  title: string;
+  category: string;
+  fileName?: string;
+  paymentDate?: Date;
+  amount?: number;
+  notes?: string;
+  createdAt?: Date;
+};
+
+type UrgencyItem = {
+  date: string;
+  title: string;
+  detail: string;
+  tone: string;
+  href: string;
 };
 
 function visitDateTime(value: string, visitTime?: string) {
@@ -123,6 +189,13 @@ const healthArchiveLinks = [
     href: "/medications",
     icon: Pill,
     tone: "bg-[#f6fbf7] text-[#315a45]",
+  },
+  {
+    title: "Pagamenti",
+    detail: "Ricevute e ticket",
+    href: "/payments",
+    icon: CreditCard,
+    tone: "bg-[#fff7f5] text-[#7f5146]",
   },
 ];
 
@@ -192,7 +265,61 @@ async function getRecipes(familyId: string): Promise<DashboardRecipe[]> {
       id: recipe._id.toString(),
       memberName: recipe.memberName,
       medicationName: recipe.medicationName,
+      recipeCode: recipe.recipeCode,
+      doctor: recipe.doctor,
       renewalDate: recipe.renewalDate?.toISOString(),
+      notes: recipe.notes,
+    }));
+  } catch {
+    return [];
+  }
+}
+
+async function getMedications(
+  familyId: string
+): Promise<DashboardMedication[]> {
+  try {
+    await connectMongo();
+
+    const medications = await Medication.find({ familyId })
+      .sort({ createdAt: -1 })
+      .lean<StoredMedication[]>();
+
+    return medications.map((medication) => ({
+      id: medication._id.toString(),
+      memberName: medication.memberName,
+      name: medication.name,
+      dosage: medication.dosage,
+      schedule: medication.schedule,
+      startDate: medication.startDate?.toISOString(),
+      active: medication.active,
+      notes: medication.notes,
+    }));
+  } catch {
+    return [];
+  }
+}
+
+async function getDocuments(familyId: string): Promise<DashboardDocument[]> {
+  try {
+    await connectMongo();
+
+    const documents = await HealthDocument.find({ familyId })
+      .sort({ createdAt: -1 })
+      .select("-fileData")
+      .lean<StoredDocument[]>();
+
+    return documents.map((document) => ({
+      id: document._id.toString(),
+      memberName: document.memberName,
+      visitId: document.visitId,
+      title: document.title,
+      category: document.category,
+      fileName: document.fileName,
+      paymentDate: document.paymentDate?.toISOString(),
+      amount: document.amount,
+      notes: document.notes,
+      createdAt: document.createdAt?.toISOString(),
     }));
   } catch {
     return [];
@@ -231,6 +358,102 @@ function statusTone(status: DashboardVisit["status"]) {
   return tones[status];
 }
 
+function toStartOfDay(value: Date) {
+  const date = new Date(value);
+  date.setHours(0, 0, 0, 0);
+  return date;
+}
+
+function isWithinDays(value: string, days: number) {
+  const today = toStartOfDay(new Date());
+  const limit = new Date(today);
+  limit.setDate(limit.getDate() + days);
+  const date = toStartOfDay(new Date(value));
+
+  return date >= today && date <= limit;
+}
+
+function buildUrgencyItems(
+  visits: DashboardVisit[],
+  recipes: DashboardRecipe[],
+  medications: DashboardMedication[]
+): UrgencyItem[] {
+  const visitItems = visits.flatMap((visit) => {
+    const items: UrgencyItem[] = [];
+
+    if (visit.status === "booked" && isWithinDays(visit.visitDate, 7)) {
+      items.push({
+        date: visit.visitDate,
+        title: "Visita in arrivo",
+        detail: `${visit.memberName} · ${visit.title}${
+          visit.visitTime ? ` · ${visit.visitTime}` : ""
+        }`,
+        tone: "border-[#d5e0d8] bg-[#f6fbf7]",
+        href: "/calendar",
+      });
+    }
+
+    if (
+      visit.status === "booked" &&
+      visit.paymentDueDate &&
+      isWithinDays(visit.paymentDueDate, 7)
+    ) {
+      items.push({
+        date: visit.paymentDueDate,
+        title: "Pagamento da fare",
+        detail: `${visit.memberName} · ${visit.title}`,
+        tone: "border-[#f1d8cf] bg-[#fff7f5]",
+        href: "/reminders",
+      });
+    }
+
+    if (
+      visit.status === "booked" &&
+      visit.cancellationDueDate &&
+      isWithinDays(visit.cancellationDueDate, 7)
+    ) {
+      items.push({
+        date: visit.cancellationDueDate,
+        title: "Ultimo giorno per disdire",
+        detail: `${visit.memberName} · ${visit.title}`,
+        tone: "border-[#f0d3a6] bg-[#fff8e9]",
+        href: "/reminders",
+      });
+    }
+
+    return items;
+  });
+
+  const recipeItems = recipes
+    .filter(
+      (recipe) => recipe.renewalDate && isWithinDays(recipe.renewalDate, 7)
+    )
+    .map((recipe) => ({
+      date: recipe.renewalDate as string,
+      title: "Ricetta da rinnovare",
+      detail: `${recipe.memberName} · ${recipe.medicationName}`,
+      tone: "border-[#d7d0ec] bg-[#faf7ff]",
+      href: "/recipes",
+    }));
+
+  const medicationItems = medications
+    .filter((medication) => medication.active)
+    .slice(0, 3)
+    .map((medication) => ({
+      date: new Date().toISOString(),
+      title: "Terapia attiva",
+      detail: `${medication.memberName} · ${medication.name}${
+        medication.schedule ? ` · ${medication.schedule}` : ""
+      }`,
+      tone: "border-[#d5e0d8] bg-[#f6fbf7]",
+      href: "/medications",
+    }));
+
+  return [...visitItems, ...recipeItems, ...medicationItems]
+    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+    .slice(0, 6);
+}
+
 function groupVisitsByMember(
   visits: DashboardVisit[],
   members: Awaited<ReturnType<typeof getFamilyMembers>>
@@ -241,50 +464,94 @@ function groupVisitsByMember(
   }));
 }
 
-function buildSmartReminders(visits: DashboardVisit[], recipes: DashboardRecipe[]) {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+function buildSearchItems(
+  visits: DashboardVisit[],
+  recipes: DashboardRecipe[],
+  medications: DashboardMedication[],
+  documents: DashboardDocument[]
+): SearchItem[] {
+  const visitItems = visits.map((visit) => ({
+    id: visit.id,
+    type: "Visita" as const,
+    title: visit.title,
+    detail: `${formatDate(visit.visitDate)} · ${
+      visit.location ?? "Luogo non impostato"
+    }`,
+    memberName: visit.memberName,
+    href: "/calendar",
+    searchText: [
+      visit.memberName,
+      visit.title,
+      visit.doctor,
+      visit.location,
+      visit.notes,
+      statusLabel(visit.status),
+    ]
+      .filter(Boolean)
+      .join(" "),
+  }));
 
-  const visitActions = visits.flatMap((visit) => {
-    const actions = [];
+  const recipeItems = recipes.map((recipe) => ({
+    id: recipe.id,
+    type: "Ricetta" as const,
+    title: recipe.medicationName,
+    detail: `Codice: ${recipe.recipeCode || "non impostato"}`,
+    memberName: recipe.memberName,
+    href: "/recipes",
+    searchText: [
+      recipe.memberName,
+      recipe.medicationName,
+      recipe.recipeCode,
+      recipe.doctor,
+      recipe.notes,
+    ]
+      .filter(Boolean)
+      .join(" "),
+  }));
 
-    if (visit.paymentDueDate && visit.status === "booked") {
-      actions.push({
-        date: visit.paymentDueDate,
-        title: "Pagamento visita",
-        detail: `${visit.memberName} · ${visit.title} · entro ${formatDate(
-          visit.paymentDueDate
-        )}`,
-      });
-    }
+  const medicationItems = medications.map((medication) => ({
+    id: medication.id,
+    type: "Farmaco" as const,
+    title: medication.name,
+    detail: `${medication.dosage || "Dosaggio non impostato"} · ${
+      medication.schedule || "Orari non impostati"
+    }`,
+    memberName: medication.memberName,
+    href: "/medications",
+    searchText: [
+      medication.memberName,
+      medication.name,
+      medication.dosage,
+      medication.schedule,
+      medication.notes,
+    ]
+      .filter(Boolean)
+      .join(" "),
+  }));
 
-    if (visit.cancellationDueDate && visit.status === "booked") {
-      actions.push({
-        date: visit.cancellationDueDate,
-        title: "Termine disdetta",
-        detail: `${visit.memberName} · ${visit.title} · entro ${formatDate(
-          visit.cancellationDueDate
-        )}`,
-      });
-    }
+  const documentItems = documents.map((document) => ({
+    id: document.id,
+    type: "Documento" as const,
+    title: document.title,
+    detail: `${document.category} · ${
+      document.fileName ?? "scheda senza file"
+    }`,
+    memberName: document.memberName,
+    href: "/documents",
+    searchText: [
+      document.memberName,
+      document.title,
+      document.category,
+      document.fileName,
+      document.paymentDate,
+      document.amount?.toString(),
+      document.notes,
+    ]
+      .filter(Boolean)
+      .join(" "),
+  }));
 
-    return actions;
-  });
-
-  const recipeActions = recipes
-    .filter((recipe) => recipe.renewalDate)
-    .map((recipe) => ({
-      date: recipe.renewalDate as string,
-      title: "Rinnovo ricetta",
-      detail: `${recipe.memberName} · ${recipe.medicationName} · entro ${formatDate(
-        recipe.renewalDate
-      )}`,
-    }));
-
-  return [...visitActions, ...recipeActions]
-    .filter((action) => new Date(action.date) >= today)
-    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-    .slice(0, 4);
+  return [...visitItems, ...recipeItems, ...medicationItems, ...documentItems];
 }
 
 export default async function Home() {
@@ -294,8 +561,16 @@ export default async function Home() {
   const memberNames = members.map((member) => member.name);
   const visits = await getVisits(user.familyId);
   const recipes = await getRecipes(user.familyId);
+  const medications = await getMedications(user.familyId);
+  const documents = await getDocuments(user.familyId);
   const visitGroups = groupVisitsByMember(visits, members);
-  const smartReminders = buildSmartReminders(visits, recipes);
+  const urgencyItems = buildUrgencyItems(visits, recipes, medications);
+  const searchItems = buildSearchItems(
+    visits,
+    recipes,
+    medications,
+    documents
+  );
   const paymentCount = visits.filter(
     (visit) => visit.status === "booked" && visit.paymentDueDate
   ).length;
@@ -374,13 +649,13 @@ export default async function Home() {
           </Link>
 
           <div className="flex items-center gap-2">
-            <a
-              className="hidden h-10 items-center gap-2 rounded-md border border-[#e3d7cf] bg-white px-3 text-sm font-medium text-[#4f5c55] shadow-sm transition hover:bg-[#f8f1ec] sm:flex"
-              href="#promemoria"
+            <Link
+              className="flex h-10 items-center gap-2 rounded-md border border-[#e3d7cf] bg-white px-3 text-sm font-medium text-[#4f5c55] shadow-sm transition hover:bg-[#f8f1ec]"
+              href="/reminders"
             >
               <Bell size={17} aria-hidden="true" />
-              Promemoria
-            </a>
+              <span className="hidden min-[390px]:inline">Promemoria</span>
+            </Link>
             <VisitForm familyMembers={memberNames} />
           </div>
         </div>
@@ -505,6 +780,8 @@ export default async function Home() {
         </aside>
 
         <div className="space-y-4 sm:space-y-6">
+          <GlobalSearch items={searchItems} />
+
           <section className="grid gap-4 md:grid-cols-[1.4fr_1fr]">
             <div className="rounded-lg border border-[#eadfd7] bg-white p-4 shadow-sm sm:p-5">
               <div className="mb-4 flex items-start justify-between gap-3 sm:mb-5">
@@ -546,38 +823,46 @@ export default async function Home() {
                 })}
               </div>
 
-              <div
-                className="mt-4 rounded-lg border border-[#eee5dd] bg-[#fffdfb] p-3 sm:p-4"
-                id="promemoria"
-              >
+              <div className="mt-4 rounded-lg border border-[#eee5dd] bg-[#fffdfb] p-3 sm:p-4">
                 <div className="mb-3 flex items-center justify-between">
                   <h3 className="text-sm font-semibold uppercase text-[#7a6f68]">
-                    Promemoria
+                    Oggi e prossimi 7 giorni
                   </h3>
-                  <Bell size={17} className="text-[#789888]" aria-hidden="true" />
+                  <Clock3
+                    size={17}
+                    className="text-[#789888]"
+                    aria-hidden="true"
+                  />
                 </div>
-                {smartReminders.length > 0 ? (
+                {urgencyItems.length > 0 ? (
                   <div className="grid gap-2">
-                    {smartReminders.map((reminder) => (
-                      <div
-                        className="rounded-md bg-[#fffaf6] px-3 py-2"
-                        key={`${reminder.title}-${reminder.detail}`}
+                    {urgencyItems.map((item) => (
+                      <Link
+                        className={`rounded-md border px-3 py-2 transition hover:bg-white ${item.tone}`}
+                        href={item.href}
+                        key={`${item.title}-${item.detail}-${item.date}`}
                       >
-                        <p className="text-sm font-semibold text-[#29302d]">
-                          {reminder.title}
-                        </p>
-                        <p className="mt-1 text-xs text-[#6c5f57]">
-                          {reminder.detail}
-                        </p>
-                      </div>
+                        <span className="flex flex-wrap items-center justify-between gap-2">
+                          <span className="text-sm font-semibold text-[#29302d]">
+                            {item.title}
+                          </span>
+                          <span className="text-xs font-semibold text-[#6c5f57]">
+                            {formatDate(item.date)}
+                          </span>
+                        </span>
+                        <span className="mt-1 block text-xs leading-5 text-[#6c5f57]">
+                          {item.detail}
+                        </span>
+                      </Link>
                     ))}
                   </div>
                 ) : (
                   <p className="text-sm text-[#6c5f57]">
-                    Nessun promemoria urgente impostato.
+                    Nessuna urgenza nei prossimi 7 giorni.
                   </p>
                 )}
               </div>
+
             </div>
 
             <div className="rounded-lg border border-[#eadfd7] bg-white p-4 shadow-sm sm:p-5">

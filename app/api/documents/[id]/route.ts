@@ -39,8 +39,12 @@ export async function PATCH(request: Request, context: RouteContext) {
   const update: Record<string, unknown> = {
     familyId: user.familyId,
     memberName,
+    visitId: body.visitId ? String(body.visitId).trim() : undefined,
     title,
     category: body.category ?? "altro",
+    paymentDate: body.paymentDate || undefined,
+    amount:
+      body.amount || body.amount === 0 ? Number(body.amount) : undefined,
     notes: body.notes ? String(body.notes).trim() : undefined,
   };
 

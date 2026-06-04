@@ -10,14 +10,23 @@ const MAX_FILE_SIZE = 2 * 1024 * 1024;
 
 const initialForm = {
   memberName: fallbackFamilyMembers[0],
+  visitId: "",
   title: "",
   category: "referto",
   notes: "",
 };
 
+type LinkableVisit = {
+  id: string;
+  memberName: string;
+  title: string;
+  visitDate: string;
+};
+
 type EditableDocument = {
   id: string;
   memberName: string;
+  visitId?: string;
   title: string;
   category: string;
   fileName?: string;
@@ -28,6 +37,7 @@ type DocumentFormProps = {
   mode?: "create" | "edit";
   document?: EditableDocument;
   familyMembers?: string[];
+  visits?: LinkableVisit[];
 };
 
 function buildInitialForm(
@@ -37,7 +47,9 @@ function buildInitialForm(
   if (!document) return initialForm;
 
   return {
-    memberName: document.memberName || familyMembers[0] || fallbackFamilyMembers[0],
+    memberName:
+      document.memberName || familyMembers[0] || fallbackFamilyMembers[0],
+    visitId: document.visitId ?? "",
     title: document.title,
     category: document.category,
     notes: document.notes ?? "",
@@ -57,6 +69,7 @@ export function DocumentForm({
   mode = "create",
   document,
   familyMembers = fallbackFamilyMembers,
+  visits = [],
 }: DocumentFormProps) {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
@@ -67,6 +80,9 @@ export function DocumentForm({
   const [error, setError] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const isEditing = mode === "edit";
+  const matchingVisits = visits.filter(
+    (visit) => visit.memberName === form.memberName
+  );
 
   function openForm() {
     setForm(buildInitialForm(document, familyMembers));
@@ -180,6 +196,7 @@ export function DocumentForm({
                       setForm((current) => ({
                         ...current,
                         memberName: event.target.value,
+                        visitId: "",
                       }))
                     }
                   >
@@ -206,10 +223,34 @@ export function DocumentForm({
                     <option value="referto">Referto</option>
                     <option value="esame">Esame</option>
                     <option value="prescrizione">Prescrizione</option>
+                    <option value="pagamento">Pagamento</option>
                     <option value="altro">Altro</option>
                   </select>
                 </label>
               </div>
+
+              <label className="block space-y-2">
+                <span className="text-sm font-semibold text-[#4f5c55]">
+                  Visita collegata
+                </span>
+                <select
+                  className="h-11 w-full rounded-md border border-[#ded4cb] bg-white px-3 text-sm outline-none focus:border-[#789888] focus:ring-2 focus:ring-[#d9eadf]"
+                  value={form.visitId}
+                  onChange={(event) =>
+                    setForm((current) => ({
+                      ...current,
+                      visitId: event.target.value,
+                    }))
+                  }
+                >
+                  <option value="">Nessuna visita collegata</option>
+                  {matchingVisits.map((visit) => (
+                    <option key={visit.id} value={visit.id}>
+                      {visit.title} · {formatVisitDate(visit.visitDate)}
+                    </option>
+                  ))}
+                </select>
+              </label>
 
               <label className="block space-y-2">
                 <span className="text-sm font-semibold text-[#4f5c55]">
@@ -296,4 +337,12 @@ export function DocumentForm({
       ) : null}
     </>
   );
+}
+
+function formatVisitDate(value: string) {
+  return new Intl.DateTimeFormat("it-IT", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  }).format(new Date(value));
 }

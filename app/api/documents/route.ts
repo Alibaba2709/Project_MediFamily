@@ -51,8 +51,12 @@ export async function POST(request: Request) {
   const document = await HealthDocument.create({
     familyId: user.familyId,
     memberName,
+    visitId: body.visitId ? String(body.visitId).trim() : undefined,
     title,
     category: body.category ?? "altro",
+    paymentDate: body.paymentDate || undefined,
+    amount:
+      body.amount || body.amount === 0 ? Number(body.amount) : undefined,
     fileName: body.fileName ? String(body.fileName).trim() : undefined,
     fileType: body.fileType ? String(body.fileType).trim() : undefined,
     fileSize: body.fileSize ? Number(body.fileSize) : undefined,
