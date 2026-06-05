@@ -138,8 +138,18 @@ type IntakeItem = Awaited<ReturnType<typeof getTodayIntakes>>[number];
 type MedicationsPageProps = {
   searchParams?: Promise<{
     member?: string;
+    status?: string;
   }>;
 };
+const statusFilterLabels = {
+  active: "Attivi",
+  all: "Tutti",
+  ended: "Terminati",
+  suspended: "Sospesi",
+  today: "Oggi",
+};
+
+type StatusFilterKey = keyof typeof statusFilterLabels;
 
 function getDoseStatusLabel(
   time: string,
@@ -164,6 +174,23 @@ function getDoseStatusTone(statusLabel: string) {
   };
 
   return tones[statusLabel] ?? tones.Programmato;
+}
+
+function isMedicationEnded(medication: MedicationItem) {
+  return Boolean(medication.endDate && medication.endDate < todayDateKey());
+}
+
+function matchesStatusFilter(
+  medication: MedicationItem,
+  status: StatusFilterKey,
+  todayMedicationIds: Set<string>
+) {
+  if (status === "today") return todayMedicationIds.has(medication.id);
+  if (status === "active") return medication.active && !isMedicationEnded(medication);
+  if (status === "ended") return isMedicationEnded(medication);
+  if (status === "suspended") return !medication.active;
+
+  return true;
 }
 
 function hasLowStock(medication: MedicationItem) {
@@ -293,14 +320,57 @@ export default async function MedicationsPage({
     params?.member && memberNames.includes(params.member)
       ? params.member
       : "all";
+  const selectedStatus =
+    params?.status &&
+    Object.keys(statusFilterLabels).includes(params.status)
+      ? (params.status as StatusFilterKey)
+      : "all";
   const medicationGroups = groupMedicationsByMember(
     visibleMedications,
     members
+  );
+  const todayMedicationIdSet = new Set(
+    todayTherapies.map((therapy) => therapy.medicationId)
   );
   const filteredMedicationGroups =
     selectedMember === "all"
       ? medicationGroups
       : medicationGroups.filter((group) => group.name === selectedMember);
+  const statusCounts = {
+    active: filteredMedicationGroups
+      .flatMap((group) => group.medications)
+      .filter((medication) =>
+        matchesStatusFilter(medication, "active", todayMedicationIdSet)
+      ).length,
+    all: filteredMedicationGroups.flatMap((group) => group.medications).length,
+    ended: filteredMedicationGroups
+      .flatMap((group) => group.medications)
+      .filter((medication) =>
+        matchesStatusFilter(medication, "ended", todayMedicationIdSet)
+      ).length,
+    suspended: filteredMedicationGroups
+      .flatMap((group) => group.medications)
+      .filter((medication) =>
+        matchesStatusFilter(medication, "suspended", todayMedicationIdSet)
+      ).length,
+    today: filteredMedicationGroups
+      .flatMap((group) => group.medications)
+      .filter((medication) =>
+        matchesStatusFilter(medication, "today", todayMedicationIdSet)
+      ).length,
+  };
+  const archiveGroups = filteredMedicationGroups
+    .map((group) => ({
+      ...group,
+      medications: group.medications.filter((medication) =>
+        matchesStatusFilter(
+          medication,
+          selectedStatus,
+          todayMedicationIdSet
+        )
+      ),
+    }))
+    .filter((group) => group.medications.length > 0);
   const todayTherapiesByMember = members
     .map((member) => ({
       ...member,
@@ -355,6 +425,82 @@ export default async function MedicationsPage({
                 Segui le terapie giornaliere, gli orari e lo storico delle
                 assunzioni.
               </p>
+            </div>
+          </div>
+        </section>
+
+        <section className="rounded-lg border border-[#eadfd7] bg-white p-4 shadow-sm">
+          <p className="text-sm font-semibold uppercase text-[#947b6a]">
+            Filtri rapidi
+          </p>
+          <div className="mt-3 space-y-2">
+            <p className="text-xs font-semibold uppercase text-[#947b6a]">
+              Familiare
+            </p>
+            <div className="flex gap-2 overflow-x-auto pb-1">
+              <Link
+                className={
+                  selectedMember === "all"
+                    ? "whitespace-nowrap rounded-md bg-[#315a45] px-3 py-2 text-sm font-semibold text-white"
+                    : "whitespace-nowrap rounded-md border border-[#ded4cb] bg-[#fffdfb] px-3 py-2 text-sm font-semibold text-[#4f5c55]"
+                }
+                href={{
+                  pathname: "/medications",
+                  query:
+                    selectedStatus === "all" ? {} : { status: selectedStatus },
+                }}
+              >
+                Tutti
+              </Link>
+              {memberNames.map((memberName) => (
+                <Link
+                  className={
+                    selectedMember === memberName
+                      ? "whitespace-nowrap rounded-md bg-[#315a45] px-3 py-2 text-sm font-semibold text-white"
+                      : "whitespace-nowrap rounded-md border border-[#ded4cb] bg-[#fffdfb] px-3 py-2 text-sm font-semibold text-[#4f5c55]"
+                  }
+                  href={{
+                    pathname: "/medications",
+                    query:
+                      selectedStatus === "all"
+                        ? { member: memberName }
+                        : { member: memberName, status: selectedStatus },
+                  }}
+                  key={memberName}
+                >
+                  {memberName}
+                </Link>
+              ))}
+            </div>
+          </div>
+          <div className="mt-4 space-y-2">
+            <p className="text-xs font-semibold uppercase text-[#947b6a]">
+              Stato terapia
+            </p>
+            <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
+              {(Object.keys(statusFilterLabels) as StatusFilterKey[]).map(
+                (status) => (
+                  <Link
+                    className={
+                      selectedStatus === status
+                        ? "h-10 rounded-md bg-[#315a45] px-3 py-2 text-center text-sm font-semibold text-white"
+                        : "h-10 rounded-md border border-[#ded4cb] bg-[#fffdfb] px-3 py-2 text-center text-sm font-semibold text-[#4f5c55]"
+                    }
+                    href={{
+                      pathname: "/medications",
+                      query: {
+                        ...(selectedMember === "all"
+                          ? {}
+                          : { member: selectedMember }),
+                        ...(status === "all" ? {} : { status }),
+                      },
+                    }}
+                    key={status}
+                  >
+                    {statusFilterLabels[status]} · {statusCounts[status]}
+                  </Link>
+                )
+              )}
             </div>
           </div>
         </section>
@@ -504,14 +650,8 @@ export default async function MedicationsPage({
         {visibleMedications.length > 0 ? (
           <MedicationArchive
             canEdit={canEdit}
-            groups={filteredMedicationGroups}
+            groups={archiveGroups}
             memberNames={memberNames}
-            selectedMember={selectedMember}
-            todayMedicationIds={Array.from(
-              new Set(
-                filteredTodayTherapies.map((therapy) => therapy.medicationId)
-              )
-            )}
           />
         ) : (
           <section className="rounded-lg border border-dashed border-[#d9cfc6] bg-white p-6 text-center shadow-sm">
