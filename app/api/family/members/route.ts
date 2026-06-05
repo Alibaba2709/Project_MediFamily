@@ -7,6 +7,40 @@ import { canManageFamily, forbidden } from "@/app/lib/permissions";
 
 const FREE_MEMBER_LIMIT = 6;
 
+function serializeMember(member: {
+  name: string;
+  role: string;
+  imageDataUrl?: string;
+  birthDate?: string;
+  fiscalCode?: string;
+  bloodType?: string;
+  primaryDoctor?: string;
+  emergencyContactName?: string;
+  emergencyContactPhone?: string;
+  allergies?: string;
+  conditions?: string;
+  healthNotes?: string;
+}) {
+  return {
+    name: member.name,
+    role: member.role,
+    ...(member.imageDataUrl ? { imageDataUrl: member.imageDataUrl } : {}),
+    ...(member.birthDate ? { birthDate: member.birthDate } : {}),
+    ...(member.fiscalCode ? { fiscalCode: member.fiscalCode } : {}),
+    ...(member.bloodType ? { bloodType: member.bloodType } : {}),
+    ...(member.primaryDoctor ? { primaryDoctor: member.primaryDoctor } : {}),
+    ...(member.emergencyContactName
+      ? { emergencyContactName: member.emergencyContactName }
+      : {}),
+    ...(member.emergencyContactPhone
+      ? { emergencyContactPhone: member.emergencyContactPhone }
+      : {}),
+    ...(member.allergies ? { allergies: member.allergies } : {}),
+    ...(member.conditions ? { conditions: member.conditions } : {}),
+    ...(member.healthNotes ? { healthNotes: member.healthNotes } : {}),
+  };
+}
+
 export async function POST(request: Request) {
   const user = await getCurrentUser();
 
@@ -54,16 +88,8 @@ export async function POST(request: Request) {
 
   const baseMembers =
     user.familyId === "famiglia-addante"
-      ? addanteMembers.map((member) => ({
-          name: member.name,
-          role: member.role,
-          ...(member.imageDataUrl ? { imageDataUrl: member.imageDataUrl } : {}),
-        }))
-      : currentMembers.map((member) => ({
-          name: member.name,
-          role: member.role,
-          ...(member.imageDataUrl ? { imageDataUrl: member.imageDataUrl } : {}),
-        }));
+      ? addanteMembers.map(serializeMember)
+      : currentMembers.map(serializeMember);
 
   const nextMembers = [...baseMembers, { name, role }];
 

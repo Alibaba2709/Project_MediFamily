@@ -45,6 +45,30 @@ function formatMoney(value?: number) {
   }).format(value);
 }
 
+function hasHealthInfo(member: {
+  birthDate?: string;
+  fiscalCode?: string;
+  bloodType?: string;
+  primaryDoctor?: string;
+  emergencyContactName?: string;
+  emergencyContactPhone?: string;
+  allergies?: string;
+  conditions?: string;
+  healthNotes?: string;
+}) {
+  return Boolean(
+    member.birthDate ||
+      member.fiscalCode ||
+      member.bloodType ||
+      member.primaryDoctor ||
+      member.emergencyContactName ||
+      member.emergencyContactPhone ||
+      member.allergies ||
+      member.conditions ||
+      member.healthNotes
+  );
+}
+
 export default async function MemberPage(context: RouteContext) {
   const user = await requireVerifiedUser();
   const members = await getFamilyMembers(user);
@@ -172,6 +196,52 @@ export default async function MemberPage(context: RouteContext) {
         </section>
 
         <section className="grid gap-4 md:grid-cols-2">
+          <ProfilePanel icon={FileText} title="Scheda sanitaria">
+            {hasHealthInfo(member) ? (
+              <div className="space-y-2">
+                {member.birthDate ? (
+                  <InfoLine
+                    label="Data di nascita"
+                    value={formatDate(new Date(member.birthDate))}
+                  />
+                ) : null}
+                {member.fiscalCode ? (
+                  <InfoLine label="Codice fiscale" value={member.fiscalCode} />
+                ) : null}
+                {member.bloodType ? (
+                  <InfoLine label="Gruppo sanguigno" value={member.bloodType} />
+                ) : null}
+                {member.primaryDoctor ? (
+                  <InfoLine label="Medico di base" value={member.primaryDoctor} />
+                ) : null}
+                {member.emergencyContactName || member.emergencyContactPhone ? (
+                  <InfoLine
+                    label="Contatto emergenza"
+                    value={[
+                      member.emergencyContactName,
+                      member.emergencyContactPhone,
+                    ]
+                      .filter(Boolean)
+                      .join(" · ")}
+                  />
+                ) : null}
+                {member.allergies ? (
+                  <InfoBlock label="Allergie" value={member.allergies} />
+                ) : null}
+                {member.conditions ? (
+                  <InfoBlock label="Patologie" value={member.conditions} />
+                ) : null}
+                {member.healthNotes ? (
+                  <InfoBlock label="Note" value={member.healthNotes} />
+                ) : null}
+              </div>
+            ) : (
+              <p className="text-sm text-[#6c5f57]">
+                Nessuna informazione sanitaria compilata.
+              </p>
+            )}
+          </ProfilePanel>
+
           <ProfilePanel icon={Stethoscope} title="Visite">
             {visits.length ? (
               visits.map((visit) => (
@@ -305,6 +375,23 @@ function ItemNote({ children }: { children: React.ReactNode }) {
     <p className="mt-1 text-sm leading-6 text-[#6c5f57]">
       <span className="font-semibold text-[#4f5c55]">Note:</span> {children}
     </p>
+  );
+}
+
+function InfoLine({ label, value }: { label: string; value: string }) {
+  return (
+    <p className="text-sm text-[#6c5f57]">
+      <span className="font-semibold text-[#4f5c55]">{label}:</span> {value}
+    </p>
+  );
+}
+
+function InfoBlock({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-md bg-[#fffaf6] px-3 py-2">
+      <p className="text-xs font-semibold uppercase text-[#7a6f68]">{label}</p>
+      <p className="mt-1 text-sm leading-5 text-[#6c5f57]">{value}</p>
+    </div>
   );
 }
 

@@ -73,6 +73,40 @@ export default async function MemberReportPage(context: RouteContext) {
       medicationTimeSortValue(getMedicationTimes(b)[0])
     )
   );
+  const healthReportItems: Array<{ detail: string; title: string }> = [
+    member.birthDate
+      ? {
+          detail: formatDate(new Date(member.birthDate)),
+          title: "Data di nascita",
+        }
+      : null,
+    member.fiscalCode
+      ? { detail: member.fiscalCode, title: "Codice fiscale" }
+      : null,
+    member.bloodType
+      ? { detail: member.bloodType, title: "Gruppo sanguigno" }
+      : null,
+    member.primaryDoctor
+      ? { detail: member.primaryDoctor, title: "Medico di base" }
+      : null,
+    member.emergencyContactName || member.emergencyContactPhone
+      ? {
+          detail: [member.emergencyContactName, member.emergencyContactPhone]
+            .filter(Boolean)
+            .join(" · "),
+          title: "Contatto emergenza",
+        }
+      : null,
+    member.allergies ? { detail: member.allergies, title: "Allergie" } : null,
+    member.conditions
+      ? { detail: member.conditions, title: "Patologie" }
+      : null,
+    member.healthNotes
+      ? { detail: member.healthNotes, title: "Note sanitarie" }
+      : null,
+  ].filter((item): item is { detail: string; title: string } =>
+    Boolean(item)
+  );
 
   return (
     <main className="min-h-screen bg-[#fffaf6] px-5 py-6 text-[#2f3330] print:bg-white sm:px-8">
@@ -99,6 +133,20 @@ export default async function MemberReportPage(context: RouteContext) {
             Generato da MediFamily il {formatDate(new Date())}
           </p>
         </section>
+
+        <ReportSection title="Scheda sanitaria">
+          {healthReportItems.length ? (
+            healthReportItems.map((item) => (
+              <ReportItem
+                detail={item.detail}
+                key={item.title}
+                title={item.title}
+              />
+            ))
+          ) : (
+            <EmptyReportLine />
+          )}
+        </ReportSection>
 
         <ReportSection title="Visite">
           {visits.length ? (

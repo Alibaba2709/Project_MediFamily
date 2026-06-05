@@ -7,6 +7,15 @@ export type FamilyMember = {
   role: string;
   tone: string;
   imageDataUrl?: string;
+  birthDate?: string;
+  fiscalCode?: string;
+  bloodType?: string;
+  primaryDoctor?: string;
+  emergencyContactName?: string;
+  emergencyContactPhone?: string;
+  allergies?: string;
+  conditions?: string;
+  healthNotes?: string;
 };
 
 export type FamilyBookingSettings = {
@@ -44,6 +53,15 @@ type StoredFamily = {
     name?: string;
     role?: string;
     imageDataUrl?: string;
+    birthDate?: string;
+    fiscalCode?: string;
+    bloodType?: string;
+    primaryDoctor?: string;
+    emergencyContactName?: string;
+    emergencyContactPhone?: string;
+    allergies?: string;
+    conditions?: string;
+    healthNotes?: string;
   }>;
   bookingRegion?: string;
   bookingPortalName?: string;
@@ -64,6 +82,17 @@ export async function getFamilyMembers(user: CurrentUser): Promise<FamilyMember[
       role: String(member.role ?? "Familiare").trim(),
       tone: tones[index % tones.length],
       imageDataUrl: String(member.imageDataUrl ?? "").trim() || undefined,
+      birthDate: String(member.birthDate ?? "").trim() || undefined,
+      fiscalCode: String(member.fiscalCode ?? "").trim() || undefined,
+      bloodType: String(member.bloodType ?? "").trim() || undefined,
+      primaryDoctor: String(member.primaryDoctor ?? "").trim() || undefined,
+      emergencyContactName:
+        String(member.emergencyContactName ?? "").trim() || undefined,
+      emergencyContactPhone:
+        String(member.emergencyContactPhone ?? "").trim() || undefined,
+      allergies: String(member.allergies ?? "").trim() || undefined,
+      conditions: String(member.conditions ?? "").trim() || undefined,
+      healthNotes: String(member.healthNotes ?? "").trim() || undefined,
     }))
     .filter((member) => member.name);
 

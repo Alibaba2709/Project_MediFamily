@@ -5,6 +5,15 @@ const FamilyMemberSchema = new Schema(
     name: { type: String, required: true },
     role: { type: String, required: true },
     imageDataUrl: { type: String },
+    birthDate: { type: String },
+    fiscalCode: { type: String },
+    bloodType: { type: String },
+    primaryDoctor: { type: String },
+    emergencyContactName: { type: String },
+    emergencyContactPhone: { type: String },
+    allergies: { type: String },
+    conditions: { type: String },
+    healthNotes: { type: String },
   },
   { _id: false }
 );

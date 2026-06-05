@@ -18,11 +18,33 @@ function serializeMember(member: {
   name: string;
   role: string;
   imageDataUrl?: string;
+  birthDate?: string;
+  fiscalCode?: string;
+  bloodType?: string;
+  primaryDoctor?: string;
+  emergencyContactName?: string;
+  emergencyContactPhone?: string;
+  allergies?: string;
+  conditions?: string;
+  healthNotes?: string;
 }) {
   return {
     name: member.name,
     role: member.role,
     ...(member.imageDataUrl ? { imageDataUrl: member.imageDataUrl } : {}),
+    ...(member.birthDate ? { birthDate: member.birthDate } : {}),
+    ...(member.fiscalCode ? { fiscalCode: member.fiscalCode } : {}),
+    ...(member.bloodType ? { bloodType: member.bloodType } : {}),
+    ...(member.primaryDoctor ? { primaryDoctor: member.primaryDoctor } : {}),
+    ...(member.emergencyContactName
+      ? { emergencyContactName: member.emergencyContactName }
+      : {}),
+    ...(member.emergencyContactPhone
+      ? { emergencyContactPhone: member.emergencyContactPhone }
+      : {}),
+    ...(member.allergies ? { allergies: member.allergies } : {}),
+    ...(member.conditions ? { conditions: member.conditions } : {}),
+    ...(member.healthNotes ? { healthNotes: member.healthNotes } : {}),
   };
 }
 
@@ -40,6 +62,14 @@ function validateImageDataUrl(value: unknown) {
   }
 
   return { imageDataUrl: value };
+}
+
+function optionalText(value: unknown) {
+  return String(value ?? "").trim() || undefined;
+}
+
+function optionalUppercaseText(value: unknown) {
+  return String(value ?? "").trim().toUpperCase() || undefined;
 }
 
 export async function PATCH(request: Request, context: RouteContext) {
@@ -60,7 +90,8 @@ export async function PATCH(request: Request, context: RouteContext) {
   if (!canEditMember) return forbidden();
 
   const body = await request.json();
-  const validation = validateImageDataUrl(body.imageDataUrl);
+  const validation =
+    "imageDataUrl" in body ? validateImageDataUrl(body.imageDataUrl) : undefined;
 
   if (validation && "error" in validation) {
     return NextResponse.json({ error: validation.error }, { status: 400 });
@@ -85,7 +116,40 @@ export async function PATCH(request: Request, context: RouteContext) {
 
     return serializeMember({
       ...member,
-      imageDataUrl: validation?.imageDataUrl,
+      imageDataUrl:
+        "imageDataUrl" in body ? validation?.imageDataUrl : member.imageDataUrl,
+      birthDate:
+        "birthDate" in body ? optionalText(body.birthDate) : member.birthDate,
+      fiscalCode:
+        "fiscalCode" in body
+          ? optionalUppercaseText(body.fiscalCode)
+          : member.fiscalCode,
+      bloodType:
+        "bloodType" in body
+          ? optionalUppercaseText(body.bloodType)
+          : member.bloodType,
+      primaryDoctor:
+        "primaryDoctor" in body
+          ? optionalText(body.primaryDoctor)
+          : member.primaryDoctor,
+      emergencyContactName:
+        "emergencyContactName" in body
+          ? optionalText(body.emergencyContactName)
+          : member.emergencyContactName,
+      emergencyContactPhone:
+        "emergencyContactPhone" in body
+          ? optionalText(body.emergencyContactPhone)
+          : member.emergencyContactPhone,
+      allergies:
+        "allergies" in body ? optionalText(body.allergies) : member.allergies,
+      conditions:
+        "conditions" in body
+          ? optionalText(body.conditions)
+          : member.conditions,
+      healthNotes:
+        "healthNotes" in body
+          ? optionalText(body.healthNotes)
+          : member.healthNotes,
     });
   });
 

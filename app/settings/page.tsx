@@ -12,6 +12,7 @@ import { BookingSettingsForm } from "@/app/components/BookingSettingsForm";
 import { NotificationSettingsForm } from "@/app/components/NotificationSettingsForm";
 import { FamilyAccessManager } from "@/app/components/FamilyAccessManager";
 import { ProfileImageControl } from "@/app/components/ProfileImageControl";
+import { MemberHealthInfoForm } from "@/app/components/MemberHealthInfoForm";
 import { User } from "@/app/models/User";
 import { FamilyInvite } from "@/app/models/FamilyInvite";
 
@@ -137,6 +138,16 @@ export default async function SettingsPage() {
                 </p>
               </div>
             </div>
+            {currentMember ? (
+              <div className="mt-5 border-t border-[#eee5dd] pt-4">
+                <h3 className="text-sm font-semibold uppercase text-[#7a6f68]">
+                  Scheda sanitaria personale
+                </h3>
+                <div className="mt-3">
+                  <MemberHealthInfoForm member={currentMember} />
+                </div>
+              </div>
+            ) : null}
           </article>
 
           <article className="rounded-lg border border-[#eadfd7] bg-white p-5 shadow-sm">

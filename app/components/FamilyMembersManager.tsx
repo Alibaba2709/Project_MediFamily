@@ -6,6 +6,7 @@ import { Trash2 } from "lucide-react";
 import { FamilyMember } from "@/app/lib/family";
 import { AddFamilyMemberForm } from "@/app/components/AddFamilyMemberForm";
 import { ProfileImageControl } from "@/app/components/ProfileImageControl";
+import { MemberHealthInfoForm } from "@/app/components/MemberHealthInfoForm";
 
 const FREE_MEMBER_LIMIT = 6;
 
@@ -63,36 +64,46 @@ export function FamilyMembersManager({
             className="flex flex-col gap-3 rounded-md bg-[#fffaf6] p-2 sm:flex-row sm:items-center sm:justify-between"
             key={member.name}
           >
-            <span className="flex min-w-0 items-center gap-3">
-              <ProfileImageControl
-                avatarClassName="size-9"
-                compact
-                hasImage={Boolean(member.imageDataUrl)}
-                imageDataUrl={member.imageDataUrl}
-                memberName={member.name}
-                mode="avatar"
-                name={member.name}
-                tone={member.tone}
-              />
-              <span className="min-w-0">
-                <span className="block truncate text-sm font-semibold text-[#29302d]">
-                  {member.name}
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center justify-between gap-3">
+                <span className="flex min-w-0 items-center gap-3">
+                  <ProfileImageControl
+                    avatarClassName="size-9"
+                    compact
+                    hasImage={Boolean(member.imageDataUrl)}
+                    imageDataUrl={member.imageDataUrl}
+                    memberName={member.name}
+                    mode="avatar"
+                    name={member.name}
+                    tone={member.tone}
+                  />
+                  <span className="min-w-0">
+                    <span className="block truncate text-sm font-semibold text-[#29302d]">
+                      {member.name}
+                    </span>
+                    <span className="block truncate text-xs text-[#7a6f68]">
+                      {member.role}
+                    </span>
+                  </span>
                 </span>
-                <span className="block truncate text-xs text-[#7a6f68]">
-                  {member.role}
-                </span>
-              </span>
-            </span>
-            <div className="flex items-center justify-between gap-2 sm:justify-end">
-              <button
-                aria-label={`Rimuovi ${member.name}`}
-                className="flex size-8 shrink-0 items-center justify-center rounded-md text-[#9f4d46] transition hover:bg-[#fdece8] disabled:cursor-not-allowed disabled:opacity-35"
-                disabled={member.name === currentUserName}
-                onClick={() => removeMember(member.name)}
-                type="button"
-              >
-                <Trash2 size={16} aria-hidden="true" />
-              </button>
+                <button
+                  aria-label={`Rimuovi ${member.name}`}
+                  className="flex size-8 shrink-0 items-center justify-center rounded-md text-[#9f4d46] transition hover:bg-[#fdece8] disabled:cursor-not-allowed disabled:opacity-35"
+                  disabled={member.name === currentUserName}
+                  onClick={() => removeMember(member.name)}
+                  type="button"
+                >
+                  <Trash2 size={16} aria-hidden="true" />
+                </button>
+              </div>
+              <details className="mt-3 rounded-md border border-[#eadfd7] bg-white p-3">
+                <summary className="cursor-pointer text-sm font-semibold text-[#315a45]">
+                  Scheda sanitaria
+                </summary>
+                <div className="mt-3">
+                  <MemberHealthInfoForm member={member} />
+                </div>
+              </details>
             </div>
           </div>
         ))}

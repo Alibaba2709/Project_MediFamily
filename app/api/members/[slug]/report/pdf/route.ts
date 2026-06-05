@@ -174,6 +174,38 @@ export async function GET(_request: Request, context: RouteContext) {
     member.name,
     `Generato il ${formatDate(new Date())}`,
     "",
+    "SCHEDA SANITARIA",
+    ...(member.birthDate
+      ? [`Data di nascita: ${formatDate(new Date(member.birthDate))}`]
+      : []),
+    ...(member.fiscalCode ? [`Codice fiscale: ${member.fiscalCode}`] : []),
+    ...(member.bloodType ? [`Gruppo sanguigno: ${member.bloodType}`] : []),
+    ...(member.primaryDoctor ? [`Medico di base: ${member.primaryDoctor}`] : []),
+    ...(member.emergencyContactName || member.emergencyContactPhone
+      ? [
+          `Contatto emergenza: ${[
+            member.emergencyContactName,
+            member.emergencyContactPhone,
+          ]
+            .filter(Boolean)
+            .join(" - ")}`,
+        ]
+      : []),
+    ...(member.allergies ? [`Allergie: ${member.allergies}`] : []),
+    ...(member.conditions ? [`Patologie: ${member.conditions}`] : []),
+    ...(member.healthNotes ? [`Note sanitarie: ${member.healthNotes}`] : []),
+    ...(member.birthDate ||
+    member.fiscalCode ||
+    member.bloodType ||
+    member.primaryDoctor ||
+    member.emergencyContactName ||
+    member.emergencyContactPhone ||
+    member.allergies ||
+    member.conditions ||
+    member.healthNotes
+      ? []
+      : ["Nessun dato registrato."]),
+    "",
     "VISITE",
     ...(visits.length
       ? visits.flatMap((visit) => [
