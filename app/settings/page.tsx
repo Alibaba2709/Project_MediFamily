@@ -107,7 +107,7 @@ export default async function SettingsPage() {
           </div>
         </section>
 
-        <section className="grid gap-4 md:grid-cols-2">
+        <section className="grid items-start gap-4 md:grid-cols-2">
           <article className="rounded-lg border border-[#eadfd7] bg-white p-5 shadow-sm">
             <h2 className="text-sm font-semibold uppercase text-[#7a6f68]">
               Profilo account
