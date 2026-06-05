@@ -6,7 +6,6 @@ import { Trash2 } from "lucide-react";
 import { FamilyMember } from "@/app/lib/family";
 import { AddFamilyMemberForm } from "@/app/components/AddFamilyMemberForm";
 import { ProfileImageControl } from "@/app/components/ProfileImageControl";
-import { MemberHealthInfoForm } from "@/app/components/MemberHealthInfoForm";
 
 const FREE_MEMBER_LIMIT = 6;
 
@@ -96,14 +95,6 @@ export function FamilyMembersManager({
                   <Trash2 size={16} aria-hidden="true" />
                 </button>
               </div>
-              <details className="mt-3 rounded-md border border-[#eadfd7] bg-white p-3">
-                <summary className="cursor-pointer text-sm font-semibold text-[#315a45]">
-                  Scheda sanitaria
-                </summary>
-                <div className="mt-3">
-                  <MemberHealthInfoForm member={member} />
-                </div>
-              </details>
             </div>
           </div>
         ))}

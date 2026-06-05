@@ -11,8 +11,7 @@ import { FamilyMembersManager } from "@/app/components/FamilyMembersManager";
 import { BookingSettingsForm } from "@/app/components/BookingSettingsForm";
 import { NotificationSettingsForm } from "@/app/components/NotificationSettingsForm";
 import { FamilyAccessManager } from "@/app/components/FamilyAccessManager";
-import { ProfileImageControl } from "@/app/components/ProfileImageControl";
-import { MemberHealthInfoForm } from "@/app/components/MemberHealthInfoForm";
+import { FamilyProfileSettings } from "@/app/components/FamilyProfileSettings";
 import { User } from "@/app/models/User";
 import { FamilyInvite } from "@/app/models/FamilyInvite";
 
@@ -65,10 +64,6 @@ async function getFamilyAccessData(familyId: string) {
 export default async function SettingsPage() {
   const user = await requireVerifiedUser();
   const members = await getFamilyMembers(user);
-  const currentMember =
-    members.find(
-      (member) => member.name.toLowerCase() === user.name.toLowerCase()
-    ) ?? members[0];
   const bookingSettings = await getFamilyBookingSettings(user);
   const notificationSettings = await getFamilyNotificationSettings(user);
   const accessData =
@@ -109,45 +104,12 @@ export default async function SettingsPage() {
 
         <section className="grid gap-4 md:grid-cols-2">
           <article className="rounded-lg border border-[#eadfd7] bg-white p-5 shadow-sm">
-            <h2 className="text-sm font-semibold uppercase text-[#7a6f68]">
-              Profilo
-            </h2>
-            <div className="mt-4 flex items-start gap-3">
-              <ProfileImageControl
-                avatarClassName="size-14"
-                avatarTextClassName="text-lg"
-                hasImage={Boolean(currentMember?.imageDataUrl)}
-                imageDataUrl={currentMember?.imageDataUrl}
-                memberName={user.name}
-                mode="avatar"
-                name={user.name}
-                tone={currentMember?.tone ?? "bg-[#f9d8d6]"}
-              />
-              <div className="min-w-0 space-y-3 text-sm">
-                <p>
-                  <span className="font-semibold text-[#29302d]">Nome:</span>{" "}
-                  <span className="text-[#6c5f57]">{user.name}</span>
-                </p>
-                <p>
-                  <span className="font-semibold text-[#29302d]">Email:</span>{" "}
-                  <span className="text-[#6c5f57]">{user.email}</span>
-                </p>
-                <p>
-                  <span className="font-semibold text-[#29302d]">Ruolo:</span>{" "}
-                  <span className="text-[#6c5f57]">{user.role}</span>
-                </p>
-              </div>
-            </div>
-            {currentMember ? (
-              <div className="mt-5 border-t border-[#eee5dd] pt-4">
-                <h3 className="text-sm font-semibold uppercase text-[#7a6f68]">
-                  Scheda sanitaria personale
-                </h3>
-                <div className="mt-3">
-                  <MemberHealthInfoForm member={currentMember} />
-                </div>
-              </div>
-            ) : null}
+            <FamilyProfileSettings
+              accountEmail={user.email}
+              accountRole={user.role}
+              currentUserName={user.name}
+              members={members}
+            />
           </article>
 
           <article className="rounded-lg border border-[#eadfd7] bg-white p-5 shadow-sm">
