@@ -409,6 +409,26 @@ export default async function MedicationsPage({
           {canEdit ? <MedicationForm familyMembers={memberNames} /> : null}
         </div>
 
+        <section className="rounded-lg border border-[#eadfd7] bg-white p-5 shadow-sm">
+          <div className="flex items-start gap-3">
+            <div className="flex size-11 items-center justify-center rounded-lg bg-[#f6fbf7] text-[#315a45]">
+              <Pill size={22} aria-hidden="true" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-[#947b6a]">
+                Archivio salute
+              </p>
+              <h1 className="mt-1 text-3xl font-semibold text-[#29302d]">
+                Terapie
+              </h1>
+              <p className="mt-3 max-w-2xl text-sm leading-6 text-[#6c5f57]">
+                Segui le terapie giornaliere, gli orari e lo storico delle
+                assunzioni.
+              </p>
+            </div>
+          </div>
+        </section>
+
         <section className="rounded-lg border border-[#eadfd7] bg-white p-4 shadow-sm">
           <p className="text-sm font-semibold uppercase text-[#947b6a]">
             Filtri rapidi
@@ -481,26 +501,6 @@ export default async function MedicationsPage({
                   </Link>
                 )
               )}
-            </div>
-          </div>
-        </section>
-
-        <section className="rounded-lg border border-[#eadfd7] bg-white p-5 shadow-sm">
-          <div className="flex items-start gap-3">
-            <div className="flex size-11 items-center justify-center rounded-lg bg-[#f6fbf7] text-[#315a45]">
-              <Pill size={22} aria-hidden="true" />
-            </div>
-            <div>
-              <p className="text-sm font-medium text-[#947b6a]">
-                Archivio salute
-              </p>
-              <h1 className="mt-1 text-3xl font-semibold text-[#29302d]">
-                Terapie
-              </h1>
-              <p className="mt-3 max-w-2xl text-sm leading-6 text-[#6c5f57]">
-                Segui le terapie giornaliere, gli orari e lo storico delle
-                assunzioni.
-              </p>
             </div>
           </div>
         </section>
