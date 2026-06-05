@@ -106,7 +106,7 @@ export function FamilyAccessManager({
         </div>
       </div>
 
-      <form className="grid gap-2 sm:grid-cols-[1fr_1fr_auto]" onSubmit={invite}>
+      <form className="grid gap-2 xl:grid-cols-[1fr_1fr_auto]" onSubmit={invite}>
         <input
           className="h-10 rounded-md border border-[#ded4cb] bg-white px-3 text-sm outline-none focus:border-[#789888] focus:ring-2 focus:ring-[#d9eadf]"
           name="email"

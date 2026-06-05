@@ -108,41 +108,53 @@ export default async function SettingsPage() {
         </section>
 
         <section className="grid items-start gap-4 md:grid-cols-2">
-          <article className="rounded-lg border border-[#eadfd7] bg-white p-5 shadow-sm">
-            <h2 className="text-sm font-semibold uppercase text-[#7a6f68]">
-              Profilo account
-            </h2>
-            <p className="mt-1 text-sm text-[#6c5f57]">
-              Dati di accesso del proprietario o collaboratore collegato.
-            </p>
-            <div className="mt-4 flex items-start gap-3">
-              <ProfileImageControl
-                avatarClassName="size-14"
-                avatarTextClassName="text-lg"
-                hasImage={Boolean(currentMember?.imageDataUrl)}
-                imageDataUrl={currentMember?.imageDataUrl}
-                memberName={user.name}
-                mode="avatar"
-                name={user.name}
-                tone={currentMember?.tone ?? "bg-[#f9d8d6]"}
-              />
-              <div className="min-w-0 space-y-3 text-sm">
-                <p>
-                  <span className="font-semibold text-[#29302d]">Nome:</span>{" "}
-                  <span className="text-[#6c5f57]">{user.name}</span>
-                </p>
-                <p>
-                  <span className="font-semibold text-[#29302d]">Email:</span>{" "}
-                  <span className="break-all text-[#6c5f57]">{user.email}</span>
-                </p>
-                <p>
-                  <span className="font-semibold text-[#29302d]">Ruolo:</span>{" "}
-                  <span className="text-[#6c5f57]">{user.role}</span>
-                </p>
+          <div className="space-y-4">
+            <article className="rounded-lg border border-[#eadfd7] bg-white p-5 shadow-sm">
+              <h2 className="text-sm font-semibold uppercase text-[#7a6f68]">
+                Profilo account
+              </h2>
+              <p className="mt-1 text-sm text-[#6c5f57]">
+                Dati di accesso del proprietario o collaboratore collegato.
+              </p>
+              <div className="mt-4 flex items-start gap-3">
+                <ProfileImageControl
+                  avatarClassName="size-14"
+                  avatarTextClassName="text-lg"
+                  hasImage={Boolean(currentMember?.imageDataUrl)}
+                  imageDataUrl={currentMember?.imageDataUrl}
+                  memberName={user.name}
+                  mode="avatar"
+                  name={user.name}
+                  tone={currentMember?.tone ?? "bg-[#f9d8d6]"}
+                />
+                <div className="min-w-0 space-y-3 text-sm">
+                  <p>
+                    <span className="font-semibold text-[#29302d]">Nome:</span>{" "}
+                    <span className="text-[#6c5f57]">{user.name}</span>
+                  </p>
+                  <p>
+                    <span className="font-semibold text-[#29302d]">Email:</span>{" "}
+                    <span className="break-all text-[#6c5f57]">{user.email}</span>
+                  </p>
+                  <p>
+                    <span className="font-semibold text-[#29302d]">Ruolo:</span>{" "}
+                    <span className="text-[#6c5f57]">{user.role}</span>
+                  </p>
+                </div>
               </div>
-            </div>
-            <AccountSecurityForms />
-          </article>
+              <AccountSecurityForms />
+            </article>
+
+            {user.role === "owner" ? (
+              <article className="rounded-lg border border-[#eadfd7] bg-white p-5 shadow-sm">
+                <FamilyAccessManager
+                  currentUserId={user.id}
+                  invites={accessData.invites}
+                  users={accessData.users}
+                />
+              </article>
+            ) : null}
+          </div>
 
           <article className="rounded-lg border border-[#eadfd7] bg-white p-5 shadow-sm">
             {user.role === "owner" ? (
@@ -164,14 +176,6 @@ export default async function SettingsPage() {
 
           {user.role === "owner" ? (
             <>
-              <article className="rounded-lg border border-[#eadfd7] bg-white p-5 shadow-sm md:col-span-2">
-                <FamilyAccessManager
-                  currentUserId={user.id}
-                  invites={accessData.invites}
-                  users={accessData.users}
-                />
-              </article>
-
               <article className="rounded-lg border border-[#eadfd7] bg-white p-5 shadow-sm md:col-span-2">
                 <BookingSettingsForm settings={bookingSettings} />
               </article>
