@@ -12,6 +12,7 @@ import { BookingSettingsForm } from "@/app/components/BookingSettingsForm";
 import { NotificationSettingsForm } from "@/app/components/NotificationSettingsForm";
 import { FamilyAccessManager } from "@/app/components/FamilyAccessManager";
 import { ProfileImageControl } from "@/app/components/ProfileImageControl";
+import { AccountSecurityForms } from "@/app/components/AccountSecurityForms";
 import { User } from "@/app/models/User";
 import { FamilyInvite } from "@/app/models/FamilyInvite";
 
@@ -140,6 +141,7 @@ export default async function SettingsPage() {
                 </p>
               </div>
             </div>
+            <AccountSecurityForms />
           </article>
 
           <article className="rounded-lg border border-[#eadfd7] bg-white p-5 shadow-sm">
