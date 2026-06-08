@@ -680,23 +680,27 @@ function buildSearchItems(
 function PublicHome() {
   const features = [
     {
+      icon: CalendarDays,
       title: "Visite",
-      text: "date, orari, ticket e disdette",
+      text: "Date, orari, ticket e disdette in un calendario familiare.",
     },
     {
+      icon: Pill,
       title: "Terapie",
-      text: "farmaci, dosi e scorte",
+      text: "Farmaci, dosi, scorte e conferme giornaliere per ogni membro.",
     },
     {
+      icon: FileText,
       title: "Archivio",
-      text: "ricette, documenti e ricevute",
+      text: "Ricette, documenti, ricevute e referti sempre collegati alla persona giusta.",
     },
   ];
+  const family = ["Rossana", "Modesta", "Francesco", "Isabella"];
 
   return (
-    <main className="min-h-screen bg-[#fffaf6] px-5 py-6 text-[#2f3330] sm:px-8">
-      <div className="mx-auto flex min-h-[calc(100vh-3rem)] max-w-5xl flex-col">
-        <header className="flex flex-wrap items-center justify-between gap-4">
+    <main className="min-h-screen bg-[#fffaf6] px-5 py-5 text-[#2f3330] sm:px-8">
+      <div className="mx-auto max-w-6xl">
+        <header className="flex flex-wrap items-center justify-between gap-4 rounded-lg border border-[#eadfd7] bg-white/80 px-4 py-3 shadow-sm backdrop-blur">
           <Link
             aria-label="MediFamily"
             className="inline-flex items-center gap-3"
@@ -712,7 +716,7 @@ function PublicHome() {
             />
             <span>
               <span
-                className="block text-2xl font-bold leading-tight text-[#5573ad]"
+                className="block text-xl font-bold leading-tight text-[#5573ad] sm:text-2xl"
                 style={{
                   fontFamily:
                     '"Arial Rounded MT Bold", "Avenir Next Rounded", var(--font-geist-sans), sans-serif',
@@ -753,46 +757,173 @@ function PublicHome() {
           </nav>
         </header>
 
-        <section className="flex flex-1 flex-col items-center justify-center py-16 text-center">
-          <p className="text-sm font-semibold uppercase text-[#947b6a]">
-            Family mode per la salute
-          </p>
-          <h1 className="mt-4 max-w-3xl text-4xl font-semibold leading-tight text-[#29302d] sm:text-6xl">
-            La salute di chi ami, organizzata.
-          </h1>
-          <p className="mt-5 max-w-2xl text-base leading-7 text-[#6c5f57] sm:text-lg">
-            MediFamily ti aiuta a tenere in ordine visite, ricette, farmaci e
-            documenti sanitari del tuo nucleo familiare.
-          </p>
+        <section className="grid min-h-[calc(100vh-7rem)] items-center gap-10 py-10 lg:grid-cols-[0.95fr_1.05fr] lg:py-12">
+          <div>
+            <p className="inline-flex rounded-md border border-[#eadfd7] bg-white px-3 py-1 text-sm font-semibold text-[#947b6a] shadow-sm">
+              Family mode per la salute
+            </p>
+            <h1 className="mt-5 max-w-2xl text-4xl font-semibold leading-tight text-[#29302d] sm:text-6xl">
+              La salute di chi ami, finalmente in ordine.
+            </h1>
+            <p className="mt-5 max-w-xl text-base leading-7 text-[#6c5f57] sm:text-lg">
+              Visite, ricette, farmaci, documenti e promemoria divisi per ogni
+              membro del nucleo familiare, senza fogli sparsi e messaggi persi.
+            </p>
 
-          <div className="mt-8 flex flex-wrap justify-center gap-3">
-            <Link
-              className="inline-flex h-11 items-center justify-center gap-2 rounded-md bg-[#315a45] px-5 text-sm font-semibold text-white transition hover:bg-[#274737]"
-              href="/auth/register"
-            >
-              Crea il tuo nucleo
-              <ArrowRight size={16} aria-hidden="true" />
-            </Link>
-            <Link
-              className="inline-flex h-11 items-center justify-center rounded-md border border-[#e3d7cf] bg-white px-5 text-sm font-semibold text-[#4f5c55] transition hover:bg-[#f8f1ec]"
-              href="/auth/login"
-            >
-              Accedi
-            </Link>
+            <div className="mt-7 flex flex-wrap gap-3">
+              <Link
+                className="inline-flex h-11 items-center justify-center gap-2 rounded-md bg-[#315a45] px-5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#274737]"
+                href="/auth/register"
+              >
+                Crea il tuo nucleo
+                <ArrowRight size={16} aria-hidden="true" />
+              </Link>
+              <Link
+                className="inline-flex h-11 items-center justify-center rounded-md border border-[#e3d7cf] bg-white px-5 text-sm font-semibold text-[#4f5c55] shadow-sm transition hover:bg-[#f8f1ec]"
+                href="/auth/login"
+              >
+                Accedi
+              </Link>
+            </div>
+
+            <div className="mt-7 flex flex-wrap gap-2 text-sm font-medium text-[#4f5c55]">
+              {["Profili separati", "Email verificata", "Archivio privato"].map(
+                (item) => (
+                  <span
+                    className="inline-flex items-center gap-2 rounded-md bg-white px-3 py-2 shadow-sm"
+                    key={item}
+                  >
+                    <CheckCircle2
+                      size={15}
+                      className="text-[#6e9d7d]"
+                      aria-hidden="true"
+                    />
+                    {item}
+                  </span>
+                )
+              )}
+            </div>
           </div>
 
-          <div className="mt-12 grid w-full max-w-3xl gap-3 border-y border-[#eadfd7] py-5 text-left sm:grid-cols-3">
-            {features.map((feature) => (
-              <div className="px-2" key={feature.title}>
-                <h2 className="text-sm font-semibold text-[#29302d]">
-                  {feature.title}
-                </h2>
-                <p className="mt-1 text-sm leading-6 text-[#6c5f57]">
-                  {feature.text}
-                </p>
+          <div className="relative mx-auto w-full max-w-xl">
+            <div className="rounded-lg border border-[#eadfd7] bg-white p-4 shadow-sm sm:p-5">
+              <div className="flex items-center justify-between gap-4 border-b border-[#eee5dd] pb-4">
+                <div className="flex items-center gap-3">
+                  <Image
+                    src="/medifamily-logo-symbol.png"
+                    alt=""
+                    width={760}
+                    height={650}
+                    className="h-12 w-auto object-contain"
+                  />
+                  <div>
+                    <p className="text-sm font-semibold text-[#29302d]">
+                      Dashboard famiglia
+                    </p>
+                    <p className="text-xs text-[#7a6f68]">
+                      Oggi, prossimi 7 giorni
+                    </p>
+                  </div>
+                </div>
+                <span className="rounded-md bg-[#f6fbf7] px-3 py-1 text-xs font-semibold text-[#315a45]">
+                  4 profili
+                </span>
               </div>
-            ))}
+
+              <div className="mt-4 grid gap-3 sm:grid-cols-[0.78fr_1.22fr]">
+                <div className="space-y-2">
+                  {family.map((name, index) => (
+                    <div
+                      className="flex items-center gap-2 rounded-lg bg-[#fffaf6] p-2"
+                      key={name}
+                    >
+                      <span
+                        className={[
+                          "flex size-8 items-center justify-center rounded-md text-sm font-semibold text-[#29302d]",
+                          [
+                            "bg-[#f9d8d6]",
+                            "bg-[#d9eadf]",
+                            "bg-[#dbe7fb]",
+                            "bg-[#f7e2bf]",
+                          ][index],
+                        ].join(" ")}
+                      >
+                        {name[0]}
+                      </span>
+                      <span className="truncate text-sm font-medium text-[#4f5c55]">
+                        {name}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="space-y-3">
+                  {[
+                    {
+                      icon: CalendarDays,
+                      title: "Visita cardiologica",
+                      text: "Ticket da pagare entro venerdi",
+                    },
+                    {
+                      icon: Pill,
+                      title: "Terapia serale",
+                      text: "2 farmaci da confermare",
+                    },
+                    {
+                      icon: FileText,
+                      title: "Ricetta da rinnovare",
+                      text: "Promemoria automatico salvato",
+                    },
+                  ].map((item) => {
+                    const Icon = item.icon;
+
+                    return (
+                      <div
+                        className="rounded-lg border border-[#eadfd7] bg-white p-3 shadow-sm"
+                        key={item.title}
+                      >
+                        <div className="flex items-start gap-3">
+                          <span className="flex size-9 shrink-0 items-center justify-center rounded-md bg-[#f6fbf7] text-[#315a45]">
+                            <Icon size={17} aria-hidden="true" />
+                          </span>
+                          <div>
+                            <p className="text-sm font-semibold text-[#29302d]">
+                              {item.title}
+                            </p>
+                            <p className="mt-1 text-xs leading-5 text-[#6c5f57]">
+                              {item.text}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
           </div>
+        </section>
+
+        <section className="grid gap-3 border-t border-[#eadfd7] py-6 md:grid-cols-3">
+          {features.map((feature) => {
+            const Icon = feature.icon;
+
+            return (
+              <article className="flex gap-3" key={feature.title}>
+                <span className="flex size-10 shrink-0 items-center justify-center rounded-md bg-white text-[#315a45] shadow-sm">
+                  <Icon size={19} aria-hidden="true" />
+                </span>
+                <div>
+                  <h2 className="text-sm font-semibold text-[#29302d]">
+                    {feature.title}
+                  </h2>
+                  <p className="mt-1 text-sm leading-6 text-[#6c5f57]">
+                    {feature.text}
+                  </p>
+                </div>
+              </article>
+            );
+          })}
         </section>
       </div>
     </main>
