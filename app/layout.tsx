@@ -2,10 +2,31 @@ import type { Metadata, Viewport } from "next";
 import { MobileBottomNav } from "@/app/components/MobileBottomNav";
 import "./globals.css";
 
+const siteUrl = new URL(
+  process.env.NEXT_PUBLIC_APP_URL || "https://www.medifamilyapp.it"
+);
+
 export const metadata: Metadata = {
-  title: "MediFamily",
-  description: "Dashboard familiare per visite, scadenze e documenti medici.",
+  metadataBase: siteUrl,
+  title: {
+    default: "MediFamily | La salute della famiglia organizzata",
+    template: "%s | MediFamily",
+  },
+  description:
+    "MediFamily organizza visite, ricette, farmaci, documenti sanitari e promemoria per ogni membro del nucleo familiare.",
   applicationName: "MediFamily",
+  authors: [{ name: "MediFamily" }],
+  alternates: {
+    canonical: "/",
+  },
+  keywords: [
+    "MediFamily",
+    "salute famiglia",
+    "promemoria visite mediche",
+    "ricette mediche",
+    "farmaci famiglia",
+    "archivio salute",
+  ],
   manifest: "/manifest.webmanifest",
   appleWebApp: {
     capable: true,
@@ -24,6 +45,30 @@ export const metadata: Metadata = {
         type: "image/png",
       },
     ],
+  },
+  openGraph: {
+    title: "MediFamily | La salute della famiglia organizzata",
+    description:
+      "Gestisci visite, scadenze, ricette, farmaci e documenti sanitari del tuo nucleo familiare.",
+    images: [
+      {
+        url: "/medifamily-logo.png",
+        width: 1254,
+        height: 1254,
+        alt: "Logo MediFamily",
+      },
+    ],
+    locale: "it_IT",
+    siteName: "MediFamily",
+    type: "website",
+    url: "/",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "MediFamily | La salute della famiglia organizzata",
+    description:
+      "Gestisci visite, scadenze, ricette, farmaci e documenti sanitari del tuo nucleo familiare.",
+    images: ["/medifamily-logo.png"],
   },
 };
 

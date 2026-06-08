@@ -36,14 +36,14 @@ export function LoginForm() {
   }
 
   return (
-    <form className="space-y-4"
-    onSubmit={handleSubmit}
-    method="post"
-    action="/api/auth/login"
+    <form
+      action="/api/auth/login"
+      className="space-y-4"
+      method="post"
+      onSubmit={handleSubmit}
     >
       <div>
-        <p className="text-sm font-medium text-[#947b6a]">Bentornata</p>
-        <h2 className="mt-1 text-2xl font-semibold text-[#29302d]">
+        <h2 className="text-2xl font-semibold text-[#29302d]">
           Accedi alla dashboard
         </h2>
       </div>
@@ -81,13 +81,20 @@ export function LoginForm() {
         disabled={isSaving}
         type="submit"
       >
-        {isSaving ? <Loader2 className="animate-spin" size={17} /> : <LogIn size={17} />}
+        {isSaving ? (
+          <Loader2 className="animate-spin" size={17} />
+        ) : (
+          <LogIn size={17} />
+        )}
         Accedi
       </button>
 
       <p className="text-center text-sm text-[#6c5f57]">
         Non hai un account?{" "}
-        <Link className="font-semibold text-[#5573ad] underline" href="/auth/register">
+        <Link
+          className="font-semibold text-[#5573ad] underline"
+          href="/auth/register"
+        >
           Registrati
         </Link>
       </p>

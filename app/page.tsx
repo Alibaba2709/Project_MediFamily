@@ -17,8 +17,9 @@ import {
   Stethoscope,
   Users,
 } from "lucide-react";
+import { redirect } from "next/navigation";
 import { connectMongo } from "@/app/lib/mongodb";
-import { requireVerifiedUser } from "@/app/lib/auth";
+import { getCurrentUser } from "@/app/lib/auth";
 import { Visit } from "@/app/models/Visit";
 import { Recipe } from "@/app/models/Recipe";
 import { Medication } from "@/app/models/Medication";
@@ -676,8 +677,138 @@ function buildSearchItems(
   return [...visitItems, ...recipeItems, ...medicationItems, ...documentItems];
 }
 
+function PublicHome() {
+  const features = [
+    {
+      icon: CalendarDays,
+      title: "Visite e scadenze",
+      text: "Organizza prenotazioni, orari, pagamenti e disdette senza perdere i promemoria importanti.",
+    },
+    {
+      icon: Pill,
+      title: "Terapie e farmaci",
+      text: "Tieni traccia dei farmaci di ogni familiare, degli orari giornalieri e delle scorte da ricomprare.",
+    },
+    {
+      icon: FileText,
+      title: "Archivio salute",
+      text: "Conserva documenti, ricette e ricevute collegandoli al familiare o alla visita corretta.",
+    },
+  ];
+
+  return (
+    <main className="min-h-screen bg-[#fffaf6] px-5 py-6 text-[#2f3330] sm:px-8">
+      <div className="mx-auto flex max-w-6xl flex-col gap-10">
+        <header className="flex flex-wrap items-center justify-between gap-4">
+          <Image
+            alt="MediFamily"
+            className="h-auto w-44"
+            height={97}
+            priority
+            src="/medifamily-logo-header.png"
+            width={420}
+          />
+          <nav className="flex items-center gap-2">
+            <Link
+              className="inline-flex h-10 items-center justify-center rounded-md border border-[#e3d7cf] bg-white px-4 text-sm font-semibold text-[#315a45] shadow-sm transition hover:bg-[#f8f1ec]"
+              href="/auth/login"
+            >
+              Accedi
+            </Link>
+            <Link
+              className="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-[#315a45] px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-[#274737]"
+              href="/auth/register"
+            >
+              Registrati
+              <ArrowRight size={16} aria-hidden="true" />
+            </Link>
+          </nav>
+        </header>
+
+        <section className="grid items-center gap-8 rounded-lg border border-[#eadfd7] bg-white p-6 shadow-sm md:grid-cols-[1.05fr_0.95fr] md:p-8">
+          <div>
+            <p className="text-sm font-semibold uppercase text-[#947b6a]">
+              Family mode per la salute
+            </p>
+            <h1 className="mt-3 max-w-3xl text-4xl font-semibold leading-tight text-[#29302d] sm:text-5xl">
+              La salute di chi ami, organizzata in un unico posto.
+            </h1>
+            <p className="mt-4 max-w-2xl text-base leading-7 text-[#6c5f57]">
+              MediFamily aiuta un nucleo familiare a gestire visite, ricette,
+              farmaci, documenti e promemoria con profili separati per ogni
+              familiare.
+            </p>
+            <div className="mt-6 flex flex-wrap gap-3">
+              <Link
+                className="inline-flex h-11 items-center justify-center gap-2 rounded-md bg-[#315a45] px-5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#274737]"
+                href="/auth/register"
+              >
+                Crea il tuo nucleo
+                <ArrowRight size={16} aria-hidden="true" />
+              </Link>
+              <Link
+                className="inline-flex h-11 items-center justify-center rounded-md border border-[#e3d7cf] bg-white px-5 text-sm font-semibold text-[#4f5c55] shadow-sm transition hover:bg-[#f8f1ec]"
+                href="/auth/login"
+              >
+                Ho gia un account
+              </Link>
+            </div>
+          </div>
+
+          <div className="rounded-lg border border-[#eadfd7] bg-[#fffaf6] p-4">
+            <div className="grid gap-3">
+              {[
+                ["Visita cardiologica", "Pagamento ticket entro venerdi"],
+                ["Ricetta Slowmet", "Rinnovo da controllare"],
+                ["Terapia di oggi", "2 dosi programmate"],
+              ].map(([title, text]) => (
+                <div
+                  className="rounded-lg border border-[#eadfd7] bg-white p-4 shadow-sm"
+                  key={title}
+                >
+                  <p className="text-sm font-semibold text-[#29302d]">
+                    {title}
+                  </p>
+                  <p className="mt-1 text-sm text-[#6c5f57]">{text}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="grid gap-4 md:grid-cols-3">
+          {features.map((feature) => {
+            const Icon = feature.icon;
+
+            return (
+              <article
+                className="rounded-lg border border-[#eadfd7] bg-white p-5 shadow-sm"
+                key={feature.title}
+              >
+                <div className="flex size-10 items-center justify-center rounded-lg bg-[#f6fbf7] text-[#315a45]">
+                  <Icon size={20} aria-hidden="true" />
+                </div>
+                <h2 className="mt-4 text-lg font-semibold text-[#29302d]">
+                  {feature.title}
+                </h2>
+                <p className="mt-2 text-sm leading-6 text-[#6c5f57]">
+                  {feature.text}
+                </p>
+              </article>
+            );
+          })}
+        </section>
+      </div>
+    </main>
+  );
+}
+
 export default async function Home() {
-  const user = await requireVerifiedUser();
+  const user = await getCurrentUser();
+
+  if (!user) return <PublicHome />;
+  if (!user.emailVerifiedAt) redirect("/verify-email/sent");
+
   const canEdit = user.role !== "viewer";
   const members = await getFamilyMembers(user);
   const bookingSettings = await getFamilyBookingSettings(user);
