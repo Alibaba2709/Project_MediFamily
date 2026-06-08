@@ -699,24 +699,43 @@ function PublicHome() {
         <header className="flex flex-wrap items-center justify-between gap-4">
           <Link
             aria-label="MediFamily"
-            className="inline-flex items-baseline text-2xl font-bold leading-none text-[#5573ad]"
+            className="inline-flex items-center gap-3"
             href="/"
-            style={{
-              fontFamily:
-                '"Arial Rounded MT Bold", "Avenir Next Rounded", var(--font-geist-sans), sans-serif',
-            }}
           >
-            Med
-            <span className="relative inline-block pr-0.5">
-              ı
+            <Image
+              src="/medifamily-logo-symbol.png"
+              alt=""
+              width={760}
+              height={650}
+              priority
+              className="h-12 w-auto object-contain sm:h-14"
+            />
+            <span>
               <span
-                className="absolute -top-1 left-1/2 -translate-x-1/2 text-xs leading-none text-[#ef8580]"
-                aria-hidden="true"
+                className="block text-2xl font-bold leading-tight text-[#5573ad]"
+                style={{
+                  fontFamily:
+                    '"Arial Rounded MT Bold", "Avenir Next Rounded", var(--font-geist-sans), sans-serif',
+                }}
               >
-                ♥
+                Med
+                <span className="relative inline-block pr-0.5">
+                  ı
+                  <span
+                    className="absolute -top-1 left-1/2 -translate-x-1/2 text-xs leading-none text-[#ef8580]"
+                    aria-hidden="true"
+                  >
+                    ♥
+                  </span>
+                </span>
+                <span className="text-[#82c79b]">Family</span>
+              </span>
+              <span className="block text-xs font-semibold uppercase tracking-[0.18em]">
+                <span className="text-[#82c79b]">La salute</span>{" "}
+                <span className="text-[#8fa4d8]">di chi ami,</span>{" "}
+                <span className="text-[#ef8580]">organizzata.</span>
               </span>
             </span>
-            <span className="text-[#82c79b]">Family</span>
           </Link>
           <nav className="flex items-center gap-2">
             <Link
