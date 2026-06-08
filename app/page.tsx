@@ -680,123 +680,100 @@ function buildSearchItems(
 function PublicHome() {
   const features = [
     {
-      icon: CalendarDays,
-      title: "Visite e scadenze",
-      text: "Organizza prenotazioni, orari, pagamenti e disdette senza perdere i promemoria importanti.",
+      title: "Visite",
+      text: "date, orari, ticket e disdette",
     },
     {
-      icon: Pill,
-      title: "Terapie e farmaci",
-      text: "Tieni traccia dei farmaci di ogni familiare, degli orari giornalieri e delle scorte da ricomprare.",
+      title: "Terapie",
+      text: "farmaci, dosi e scorte",
     },
     {
-      icon: FileText,
-      title: "Archivio salute",
-      text: "Conserva documenti, ricette e ricevute collegandoli al familiare o alla visita corretta.",
+      title: "Archivio",
+      text: "ricette, documenti e ricevute",
     },
   ];
 
   return (
     <main className="min-h-screen bg-[#fffaf6] px-5 py-6 text-[#2f3330] sm:px-8">
-      <div className="mx-auto flex max-w-6xl flex-col gap-10">
+      <div className="mx-auto flex min-h-[calc(100vh-3rem)] max-w-5xl flex-col">
         <header className="flex flex-wrap items-center justify-between gap-4">
-          <Image
-            alt="MediFamily"
-            className="h-auto w-44"
-            height={97}
-            priority
-            src="/medifamily-logo-header.png"
-            width={420}
-          />
+          <Link
+            aria-label="MediFamily"
+            className="inline-flex items-baseline text-2xl font-bold leading-none text-[#5573ad]"
+            href="/"
+            style={{
+              fontFamily:
+                '"Arial Rounded MT Bold", "Avenir Next Rounded", var(--font-geist-sans), sans-serif',
+            }}
+          >
+            Med
+            <span className="relative inline-block pr-0.5">
+              ı
+              <span
+                className="absolute -top-1 left-1/2 -translate-x-1/2 text-xs leading-none text-[#ef8580]"
+                aria-hidden="true"
+              >
+                ♥
+              </span>
+            </span>
+            <span className="text-[#82c79b]">Family</span>
+          </Link>
           <nav className="flex items-center gap-2">
             <Link
-              className="inline-flex h-10 items-center justify-center rounded-md border border-[#e3d7cf] bg-white px-4 text-sm font-semibold text-[#315a45] shadow-sm transition hover:bg-[#f8f1ec]"
+              className="inline-flex h-10 items-center justify-center rounded-md border border-[#e3d7cf] bg-white px-4 text-sm font-semibold text-[#315a45] transition hover:bg-[#f8f1ec]"
               href="/auth/login"
             >
               Accedi
             </Link>
             <Link
-              className="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-[#315a45] px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-[#274737]"
+              className="inline-flex h-10 items-center justify-center rounded-md bg-[#315a45] px-4 text-sm font-semibold text-white transition hover:bg-[#274737]"
               href="/auth/register"
             >
               Registrati
-              <ArrowRight size={16} aria-hidden="true" />
             </Link>
           </nav>
         </header>
 
-        <section className="grid items-center gap-8 rounded-lg border border-[#eadfd7] bg-white p-6 shadow-sm md:grid-cols-[1.05fr_0.95fr] md:p-8">
-          <div>
-            <p className="text-sm font-semibold uppercase text-[#947b6a]">
-              Family mode per la salute
-            </p>
-            <h1 className="mt-3 max-w-3xl text-4xl font-semibold leading-tight text-[#29302d] sm:text-5xl">
-              La salute di chi ami, organizzata in un unico posto.
-            </h1>
-            <p className="mt-4 max-w-2xl text-base leading-7 text-[#6c5f57]">
-              MediFamily aiuta un nucleo familiare a gestire visite, ricette,
-              farmaci, documenti e promemoria con profili separati per ogni
-              familiare.
-            </p>
-            <div className="mt-6 flex flex-wrap gap-3">
-              <Link
-                className="inline-flex h-11 items-center justify-center gap-2 rounded-md bg-[#315a45] px-5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#274737]"
-                href="/auth/register"
-              >
-                Crea il tuo nucleo
-                <ArrowRight size={16} aria-hidden="true" />
-              </Link>
-              <Link
-                className="inline-flex h-11 items-center justify-center rounded-md border border-[#e3d7cf] bg-white px-5 text-sm font-semibold text-[#4f5c55] shadow-sm transition hover:bg-[#f8f1ec]"
-                href="/auth/login"
-              >
-                Ho gia un account
-              </Link>
-            </div>
+        <section className="flex flex-1 flex-col items-center justify-center py-16 text-center">
+          <p className="text-sm font-semibold uppercase text-[#947b6a]">
+            Family mode per la salute
+          </p>
+          <h1 className="mt-4 max-w-3xl text-4xl font-semibold leading-tight text-[#29302d] sm:text-6xl">
+            La salute di chi ami, organizzata.
+          </h1>
+          <p className="mt-5 max-w-2xl text-base leading-7 text-[#6c5f57] sm:text-lg">
+            MediFamily ti aiuta a tenere in ordine visite, ricette, farmaci e
+            documenti sanitari del tuo nucleo familiare.
+          </p>
+
+          <div className="mt-8 flex flex-wrap justify-center gap-3">
+            <Link
+              className="inline-flex h-11 items-center justify-center gap-2 rounded-md bg-[#315a45] px-5 text-sm font-semibold text-white transition hover:bg-[#274737]"
+              href="/auth/register"
+            >
+              Crea il tuo nucleo
+              <ArrowRight size={16} aria-hidden="true" />
+            </Link>
+            <Link
+              className="inline-flex h-11 items-center justify-center rounded-md border border-[#e3d7cf] bg-white px-5 text-sm font-semibold text-[#4f5c55] transition hover:bg-[#f8f1ec]"
+              href="/auth/login"
+            >
+              Accedi
+            </Link>
           </div>
 
-          <div className="rounded-lg border border-[#eadfd7] bg-[#fffaf6] p-4">
-            <div className="grid gap-3">
-              {[
-                ["Visita cardiologica", "Pagamento ticket entro venerdi"],
-                ["Ricetta Slowmet", "Rinnovo da controllare"],
-                ["Terapia di oggi", "2 dosi programmate"],
-              ].map(([title, text]) => (
-                <div
-                  className="rounded-lg border border-[#eadfd7] bg-white p-4 shadow-sm"
-                  key={title}
-                >
-                  <p className="text-sm font-semibold text-[#29302d]">
-                    {title}
-                  </p>
-                  <p className="mt-1 text-sm text-[#6c5f57]">{text}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <section className="grid gap-4 md:grid-cols-3">
-          {features.map((feature) => {
-            const Icon = feature.icon;
-
-            return (
-              <article
-                className="rounded-lg border border-[#eadfd7] bg-white p-5 shadow-sm"
-                key={feature.title}
-              >
-                <div className="flex size-10 items-center justify-center rounded-lg bg-[#f6fbf7] text-[#315a45]">
-                  <Icon size={20} aria-hidden="true" />
-                </div>
-                <h2 className="mt-4 text-lg font-semibold text-[#29302d]">
+          <div className="mt-12 grid w-full max-w-3xl gap-3 border-y border-[#eadfd7] py-5 text-left sm:grid-cols-3">
+            {features.map((feature) => (
+              <div className="px-2" key={feature.title}>
+                <h2 className="text-sm font-semibold text-[#29302d]">
                   {feature.title}
                 </h2>
-                <p className="mt-2 text-sm leading-6 text-[#6c5f57]">
+                <p className="mt-1 text-sm leading-6 text-[#6c5f57]">
                   {feature.text}
                 </p>
-              </article>
-            );
-          })}
+              </div>
+            ))}
+          </div>
         </section>
       </div>
     </main>
