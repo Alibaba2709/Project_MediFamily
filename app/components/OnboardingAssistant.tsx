@@ -21,7 +21,7 @@ import {
   X,
 } from "lucide-react";
 
-const STORAGE_KEY = "medifamily_icon_guide_seen_v1";
+const STORAGE_KEY = "medifamily_icon_guide_seen_v2";
 
 const guideGroups = [
   {
@@ -133,11 +133,12 @@ export function OnboardingAssistant() {
     <>
       <button
         aria-label="Apri assistente MediFamily"
-        className="fixed bottom-20 right-4 z-50 flex size-12 items-center justify-center rounded-full bg-[#315a45] text-white shadow-lg transition hover:bg-[#274737] md:bottom-6 md:right-6"
+        className="fixed bottom-20 right-4 z-50 inline-flex h-12 items-center justify-center gap-2 rounded-full bg-[#315a45] px-4 text-sm font-semibold text-white shadow-lg transition hover:bg-[#274737] md:bottom-6 md:right-6"
         onClick={() => setIsOpen(true)}
         type="button"
       >
-        <ListChecks size={22} aria-hidden="true" />
+        <ListChecks size={20} aria-hidden="true" />
+        <span className="hidden sm:inline">Guida icone</span>
       </button>
 
       {isOpen ? (
@@ -149,7 +150,7 @@ export function OnboardingAssistant() {
                   Guida rapida
                 </p>
                 <h2 className="mt-1 text-2xl font-semibold text-[#29302d]">
-                  Cosa significano le icone.
+                  Guida alle icone del sito.
                 </h2>
                 <p className="mt-2 max-w-2xl text-sm leading-6 text-[#6c5f57]">
                   Una piccola mappa per orientarti nella dashboard e capire
@@ -230,7 +231,7 @@ export function OnboardingAssistant() {
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <p className="inline-flex items-center gap-2 text-sm font-semibold text-[#315a45]">
                   <CheckCircle2 size={17} aria-hidden="true" />
-                  Il simbolo assistenza resta in basso a destra.
+                  Puoi riaprire questa legenda dal pulsante “Guida icone”.
                 </p>
                 <button
                   className="inline-flex h-10 items-center justify-center rounded-md border border-[#e3d7cf] bg-white px-4 text-sm font-semibold text-[#4f5c55] transition hover:bg-[#f8f1ec]"
