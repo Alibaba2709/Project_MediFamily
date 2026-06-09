@@ -69,12 +69,10 @@ type StoredFamily = {
   notificationSettings?: Partial<FamilyNotificationSettings>;
 };
 
-export async function getFamilyMembers(user: CurrentUser): Promise<FamilyMember[]> {
-  await connectMongo();
-
-  const family = await mongoose.connection
-    .collection("families")
-    .findOne<StoredFamily>({ key: user.familyId });
+function mapFamilyMembers(
+  family: StoredFamily | null,
+  user: CurrentUser
+): FamilyMember[] {
   const storedMembers = family?.members ?? [];
   const members = storedMembers
     .map((member, index) => ({
@@ -101,6 +99,60 @@ export async function getFamilyMembers(user: CurrentUser): Promise<FamilyMember[
   if (user.familyId === "famiglia-addante") return addanteMembers;
 
   return [{ name: user.name, role: "Utente principale", tone: tones[0] }];
+}
+
+function mapFamilyBookingSettings(
+  family: StoredFamily | null,
+  user: CurrentUser
+): FamilyBookingSettings {
+  const storedSettings = {
+    region: String(family?.bookingRegion ?? "").trim(),
+    portalName: String(family?.bookingPortalName ?? "").trim(),
+    portalUrl: String(family?.bookingPortalUrl ?? "").trim(),
+  };
+
+  if (
+    storedSettings.region ||
+    storedSettings.portalName ||
+    storedSettings.portalUrl
+  ) {
+    return {
+      region: storedSettings.region,
+      portalName: storedSettings.portalName || "Portale prenotazioni",
+      portalUrl: storedSettings.portalUrl,
+    };
+  }
+
+  if (user.familyId === "famiglia-addante") return pugliaBookingSettings;
+
+  return {
+    region: "",
+    portalName: "Portale prenotazioni",
+    portalUrl: "",
+  };
+}
+
+async function getStoredFamily(user: CurrentUser) {
+  await connectMongo();
+
+  return mongoose.connection
+    .collection("families")
+    .findOne<StoredFamily>({ key: user.familyId });
+}
+
+export async function getFamilyMembers(user: CurrentUser): Promise<FamilyMember[]> {
+  const family = await getStoredFamily(user);
+
+  return mapFamilyMembers(family, user);
+}
+
+export async function getFamilyProfile(user: CurrentUser) {
+  const family = await getStoredFamily(user);
+
+  return {
+    members: mapFamilyMembers(family, user),
+    bookingSettings: mapFamilyBookingSettings(family, user),
+  };
 }
 
 export function memberSlug(name: string) {
@@ -145,37 +197,9 @@ export function normalizeFamilyMemberNames(
 export async function getFamilyBookingSettings(
   user: CurrentUser
 ): Promise<FamilyBookingSettings> {
-  await connectMongo();
+  const family = await getStoredFamily(user);
 
-  const family = await mongoose.connection
-    .collection("families")
-    .findOne<StoredFamily>({ key: user.familyId });
-
-  const storedSettings = {
-    region: String(family?.bookingRegion ?? "").trim(),
-    portalName: String(family?.bookingPortalName ?? "").trim(),
-    portalUrl: String(family?.bookingPortalUrl ?? "").trim(),
-  };
-
-  if (
-    storedSettings.region ||
-    storedSettings.portalName ||
-    storedSettings.portalUrl
-  ) {
-    return {
-      region: storedSettings.region,
-      portalName: storedSettings.portalName || "Portale prenotazioni",
-      portalUrl: storedSettings.portalUrl,
-    };
-  }
-
-  if (user.familyId === "famiglia-addante") return pugliaBookingSettings;
-
-  return {
-    region: "",
-    portalName: "Portale prenotazioni",
-    portalUrl: "",
-  };
+  return mapFamilyBookingSettings(family, user);
 }
 
 export async function getFamilyNotificationSettings(

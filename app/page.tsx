@@ -35,7 +35,7 @@ import { OnboardingAssistant } from "@/app/components/OnboardingAssistant";
 import type { SearchItem } from "@/app/components/GlobalSearch";
 import {
   displayFamilyMemberName,
-  getFamilyBookingSettings,
+  getFamilyProfile,
   getFamilyMembers,
   memberSlug,
   normalizeFamilyMemberNames,
@@ -970,15 +970,15 @@ export default async function Home() {
   if (!user.emailVerifiedAt) redirect("/verify-email/sent");
 
   const canEdit = user.role !== "viewer";
-  const [members, bookingSettings, visits, recipes, medications, documents] =
+  const [familyProfile, visits, recipes, medications, documents] =
     await Promise.all([
-      getFamilyMembers(user),
-      getFamilyBookingSettings(user),
+      getFamilyProfile(user),
       getVisits(user.familyId),
       getRecipes(user.familyId),
       getMedications(user.familyId),
       getDocuments(user.familyId),
     ]);
+  const { members, bookingSettings } = familyProfile;
   const visibleVisits = visits.map((visit) => ({
     ...visit,
     memberName: displayFamilyMemberName(visit.memberName, members),

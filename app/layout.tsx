@@ -6,6 +6,8 @@ const siteUrl = new URL(
   process.env.NEXT_PUBLIC_APP_URL || "https://www.medifamilyapp.it"
 );
 
+export const preferredRegion = "fra1";
+
 export const metadata: Metadata = {
   metadataBase: siteUrl,
   title: {
