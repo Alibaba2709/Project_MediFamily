@@ -27,5 +27,9 @@ const MedicationSchema = new Schema(
   { timestamps: true }
 );
 
+MedicationSchema.index({ familyId: 1, createdAt: -1 });
+MedicationSchema.index({ familyId: 1, memberName: 1, createdAt: -1 });
+MedicationSchema.index({ familyId: 1, active: 1, memberName: 1, name: 1 });
+
 export const Medication =
   models.Medication || mongoose.model("Medication", MedicationSchema);

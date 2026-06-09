@@ -18,4 +18,8 @@ const RecipeSchema = new Schema(
   { timestamps: true }
 );
 
+RecipeSchema.index({ familyId: 1, renewalDate: 1 });
+RecipeSchema.index({ familyId: 1, createdAt: -1 });
+RecipeSchema.index({ familyId: 1, memberName: 1, renewalDate: 1 });
+
 export const Recipe = models.Recipe || mongoose.model("Recipe", RecipeSchema);

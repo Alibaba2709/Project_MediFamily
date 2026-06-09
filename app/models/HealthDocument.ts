@@ -22,6 +22,11 @@ const HealthDocumentSchema = new Schema(
   { timestamps: true }
 );
 
+HealthDocumentSchema.index({ familyId: 1, createdAt: -1 });
+HealthDocumentSchema.index({ familyId: 1, category: 1, createdAt: -1 });
+HealthDocumentSchema.index({ familyId: 1, memberName: 1, createdAt: -1 });
+HealthDocumentSchema.index({ familyId: 1, visitId: 1 });
+
 export const HealthDocument =
   models.HealthDocument ||
   mongoose.model("HealthDocument", HealthDocumentSchema);

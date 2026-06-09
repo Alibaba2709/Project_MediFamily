@@ -22,4 +22,8 @@ const VisitSchema = new Schema(
   { timestamps: true }
 );
 
+VisitSchema.index({ familyId: 1, visitDate: 1, visitTime: 1 });
+VisitSchema.index({ familyId: 1, memberName: 1, visitDate: 1 });
+VisitSchema.index({ familyId: 1, status: 1, visitDate: 1 });
+
 export const Visit = models.Visit || mongoose.model("Visit", VisitSchema);

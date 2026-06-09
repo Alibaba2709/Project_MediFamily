@@ -21,6 +21,8 @@ MedicationIntakeSchema.index(
   { familyId: 1, medicationId: 1, intakeDate: 1, intakeTime: 1 },
   { unique: true }
 );
+MedicationIntakeSchema.index({ familyId: 1, intakeDate: 1 });
+MedicationIntakeSchema.index({ familyId: 1, intakeDate: -1, intakeTime: -1 });
 
 export const MedicationIntake =
   models.MedicationIntake ||

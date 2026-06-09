@@ -19,6 +19,8 @@ const FamilyInviteSchema = new Schema(
 );
 
 FamilyInviteSchema.index({ tokenHash: 1 }, { unique: true });
+FamilyInviteSchema.index({ familyId: 1, acceptedAt: 1, createdAt: -1 });
+FamilyInviteSchema.index({ email: 1, expiresAt: 1, acceptedAt: 1 });
 
 export const FamilyInvite =
   models.FamilyInvite || mongoose.model("FamilyInvite", FamilyInviteSchema);

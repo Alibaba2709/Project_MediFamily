@@ -29,4 +29,9 @@ const UserSchema = new Schema(
   { timestamps: true }
 );
 
+UserSchema.index({ "sessions.tokenHash": 1, "sessions.expiresAt": 1 });
+UserSchema.index({ emailVerificationTokenHash: 1, emailVerificationExpiresAt: 1 });
+UserSchema.index({ passwordResetTokenHash: 1, passwordResetExpiresAt: 1 });
+UserSchema.index({ familyId: 1, role: 1, name: 1 });
+
 export const User = models.User || mongoose.model("User", UserSchema);
