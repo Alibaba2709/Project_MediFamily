@@ -31,6 +31,7 @@ import { CancelVisitButton } from "@/app/components/CancelVisitButton";
 import { GlobalSearch } from "@/app/components/GlobalSearch";
 import { MemberAvatar } from "@/app/components/MemberAvatar";
 import { ProfileImageControl } from "@/app/components/ProfileImageControl";
+import { OnboardingAssistant } from "@/app/components/OnboardingAssistant";
 import type { SearchItem } from "@/app/components/GlobalSearch";
 import {
   displayFamilyMemberName,
@@ -1058,6 +1059,7 @@ export default async function Home() {
 
   return (
     <main className="min-h-screen bg-[#fffaf6] text-[#2f3330]">
+      <OnboardingAssistant />
       <header className="border-b border-[#eadfd7] bg-[#fffdfb]/95">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-2 px-4 py-2.5 sm:gap-3 sm:px-8 sm:py-3">
           <Link href="/" className="flex min-w-0 items-center gap-2 sm:gap-3">
