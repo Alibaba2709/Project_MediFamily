@@ -970,12 +970,15 @@ export default async function Home() {
   if (!user.emailVerifiedAt) redirect("/verify-email/sent");
 
   const canEdit = user.role !== "viewer";
-  const members = await getFamilyMembers(user);
-  const bookingSettings = await getFamilyBookingSettings(user);
-  const visits = await getVisits(user.familyId);
-  const recipes = await getRecipes(user.familyId);
-  const medications = await getMedications(user.familyId);
-  const documents = await getDocuments(user.familyId);
+  const [members, bookingSettings, visits, recipes, medications, documents] =
+    await Promise.all([
+      getFamilyMembers(user),
+      getFamilyBookingSettings(user),
+      getVisits(user.familyId),
+      getRecipes(user.familyId),
+      getMedications(user.familyId),
+      getDocuments(user.familyId),
+    ]);
   const visibleVisits = visits.map((visit) => ({
     ...visit,
     memberName: displayFamilyMemberName(visit.memberName, members),

@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { Bell, FileText, Home, Users } from "lucide-react";
-import { getCurrentUser } from "@/app/lib/auth";
+import { cookies } from "next/headers";
+
+const SESSION_COOKIE = "medifamily_session";
 
 const navItems = [
   { href: "/", label: "Home", icon: Home },
@@ -10,9 +12,10 @@ const navItems = [
 ];
 
 export async function MobileBottomNav() {
-  const user = await getCurrentUser();
+  const cookieStore = await cookies();
+  const hasSession = Boolean(cookieStore.get(SESSION_COOKIE)?.value);
 
-  if (!user?.emailVerifiedAt) return null;
+  if (!hasSession) return null;
 
   return (
     <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-[#eadfd7] bg-[#fffdfb]/95 px-2 py-2 shadow-[0_-8px_24px_rgba(47,51,48,0.08)] backdrop-blur md:hidden">
