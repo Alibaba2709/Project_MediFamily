@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Camera, Loader2, Trash2 } from "lucide-react";
 import { MemberAvatar } from "@/app/components/MemberAvatar";
 
-const MAX_IMAGE_BYTES = 1024 * 1024;
+const MAX_IMAGE_BYTES = 120 * 1024;
 const MAX_SOURCE_BYTES = 12 * 1024 * 1024;
 
 type ProfileImageControlProps = {
@@ -65,10 +65,10 @@ function blobToDataUrl(blob: Blob) {
 async function resizeImage(file: File) {
   const image = await loadImage(file);
   const attempts = [
-    { maxSize: 720, quality: 0.86 },
-    { maxSize: 600, quality: 0.78 },
-    { maxSize: 480, quality: 0.72 },
-    { maxSize: 360, quality: 0.68 },
+    { maxSize: 360, quality: 0.78 },
+    { maxSize: 288, quality: 0.72 },
+    { maxSize: 220, quality: 0.68 },
+    { maxSize: 180, quality: 0.62 },
   ];
 
   for (const attempt of attempts) {
@@ -88,7 +88,7 @@ async function resizeImage(file: File) {
     if (blob.size <= MAX_IMAGE_BYTES) return blobToDataUrl(blob);
   }
 
-  throw new Error("La foto resta sopra 1MB anche dopo la riduzione.");
+  throw new Error("La foto resta troppo pesante anche dopo la riduzione.");
 }
 
 export function ProfileImageControl({

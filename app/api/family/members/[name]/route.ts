@@ -5,7 +5,7 @@ import { connectMongo } from "@/app/lib/mongodb";
 import { addanteMembers, getFamilyMembers } from "@/app/lib/family";
 import { canManageFamily, forbidden } from "@/app/lib/permissions";
 
-const MAX_IMAGE_BYTES = 1024 * 1024;
+const MAX_IMAGE_BYTES = 120 * 1024;
 const imageDataUrlPattern = /^data:image\/(jpeg|jpg|png|webp);base64,/;
 
 type RouteContext = {
@@ -58,7 +58,7 @@ function validateImageDataUrl(value: unknown) {
   const size = Buffer.byteLength(base64, "base64");
 
   if (size > MAX_IMAGE_BYTES) {
-    return { error: "La foto deve pesare al massimo 1MB." };
+    return { error: "La foto deve pesare al massimo 120KB." };
   }
 
   return { imageDataUrl: value };
