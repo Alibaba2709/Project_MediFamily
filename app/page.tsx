@@ -682,25 +682,50 @@ function PublicHome() {
     {
       icon: CalendarDays,
       title: "Visite",
-      text: "Date, orari, ticket e disdette in un calendario familiare.",
+      text: "date, orari, ticket e disdette",
     },
     {
       icon: Pill,
       title: "Terapie",
-      text: "Farmaci, dosi, scorte e conferme giornaliere per ogni membro.",
+      text: "farmaci, dosi e scorte",
     },
     {
       icon: FileText,
       title: "Archivio",
-      text: "Ricette, documenti, ricevute e referti sempre collegati alla persona giusta.",
+      text: "ricette, ricevute e referti",
     },
   ];
-  const family = ["Rossana", "Modesta", "Francesco", "Isabella"];
+  const family = [
+    { name: "Rossana", role: "utente principale", tone: "bg-[#f9d8d6]" },
+    { name: "Modesta", role: "mamma", tone: "bg-[#d9eadf]" },
+    { name: "Francesco", role: "familiare", tone: "bg-[#dbe7fb]" },
+    { name: "Isabella", role: "sorella", tone: "bg-[#f7e2bf]" },
+  ];
+  const previewItems = [
+    {
+      icon: CalendarDays,
+      title: "Visita cardiologica",
+      detail: "Ticket entro venerdi",
+      status: "Prenotata",
+    },
+    {
+      icon: Pill,
+      title: "Terapia serale",
+      detail: "2 dosi da confermare",
+      status: "Oggi",
+    },
+    {
+      icon: FileText,
+      title: "Ricetta Slowmet",
+      detail: "Rinnovo da controllare",
+      status: "Promemoria",
+    },
+  ];
 
   return (
     <main className="min-h-screen bg-[#fffaf6] px-5 py-5 text-[#2f3330] sm:px-8">
       <div className="mx-auto max-w-6xl">
-        <header className="flex flex-wrap items-center justify-between gap-4 rounded-lg border border-[#eadfd7] bg-white/80 px-4 py-3 shadow-sm backdrop-blur">
+        <header className="flex flex-wrap items-center justify-between gap-4 py-3">
           <Link
             aria-label="MediFamily"
             className="inline-flex items-center gap-3"
@@ -741,33 +766,31 @@ function PublicHome() {
               </span>
             </span>
           </Link>
-          <nav className="flex items-center gap-2">
-            <Link
-              className="inline-flex h-10 items-center justify-center rounded-md border border-[#e3d7cf] bg-white px-4 text-sm font-semibold text-[#315a45] transition hover:bg-[#f8f1ec]"
-              href="/auth/login"
-            >
-              Accedi
-            </Link>
-            <Link
-              className="inline-flex h-10 items-center justify-center rounded-md bg-[#315a45] px-4 text-sm font-semibold text-white transition hover:bg-[#274737]"
-              href="/auth/register"
-            >
-              Registrati
-            </Link>
-          </nav>
+          <Link
+            className="inline-flex h-10 items-center justify-center rounded-md border border-[#e3d7cf] bg-white px-4 text-sm font-semibold text-[#315a45] shadow-sm transition hover:bg-[#f8f1ec]"
+            href="/auth/login"
+          >
+            Accedi
+          </Link>
         </header>
 
-        <section className="grid min-h-[calc(100vh-7rem)] items-center gap-10 py-10 lg:grid-cols-[0.95fr_1.05fr] lg:py-12">
+        <section className="grid min-h-[calc(100vh-6rem)] items-center gap-10 py-8 lg:grid-cols-[0.92fr_1.08fr] lg:py-10">
           <div>
-            <p className="inline-flex rounded-md border border-[#eadfd7] bg-white px-3 py-1 text-sm font-semibold text-[#947b6a] shadow-sm">
-              Family mode per la salute
-            </p>
-            <h1 className="mt-5 max-w-2xl text-4xl font-semibold leading-tight text-[#29302d] sm:text-6xl">
-              La salute di chi ami, finalmente in ordine.
+            <div className="flex flex-wrap gap-2">
+              <span className="inline-flex rounded-md border border-[#eadfd7] bg-white px-3 py-1 text-sm font-semibold text-[#947b6a] shadow-sm">
+                Family mode
+              </span>
+              <span className="inline-flex rounded-md bg-[#f6fbf7] px-3 py-1 text-sm font-semibold text-[#315a45]">
+                Per visite, terapie e documenti
+              </span>
+            </div>
+            <h1 className="mt-5 max-w-2xl text-4xl font-semibold leading-[1.05] text-[#29302d] sm:text-6xl">
+              Un posto solo per la salute della famiglia.
             </h1>
             <p className="mt-5 max-w-xl text-base leading-7 text-[#6c5f57] sm:text-lg">
-              Visite, ricette, farmaci, documenti e promemoria divisi per ogni
-              membro del nucleo familiare, senza fogli sparsi e messaggi persi.
+              MediFamily organizza scadenze, farmaci e documenti per ogni
+              familiare, con una dashboard privata pensata per essere letta in
+              pochi secondi.
             </p>
 
             <div className="mt-7 flex flex-wrap gap-3">
@@ -778,133 +801,142 @@ function PublicHome() {
                 Crea il tuo nucleo
                 <ArrowRight size={16} aria-hidden="true" />
               </Link>
-              <Link
-                className="inline-flex h-11 items-center justify-center rounded-md border border-[#e3d7cf] bg-white px-5 text-sm font-semibold text-[#4f5c55] shadow-sm transition hover:bg-[#f8f1ec]"
-                href="/auth/login"
-              >
-                Accedi
-              </Link>
             </div>
 
-            <div className="mt-7 flex flex-wrap gap-2 text-sm font-medium text-[#4f5c55]">
-              {["Profili separati", "Email verificata", "Archivio privato"].map(
+            <div className="mt-8 grid max-w-xl gap-3 sm:grid-cols-3">
+              {["Profili separati", "Promemoria chiari", "Archivio privato"].map(
                 (item) => (
-                  <span
-                    className="inline-flex items-center gap-2 rounded-md bg-white px-3 py-2 shadow-sm"
+                  <div
+                    className="flex items-center gap-2 border-t border-[#eadfd7] pt-3 text-sm font-medium text-[#4f5c55]"
                     key={item}
                   >
                     <CheckCircle2
-                      size={15}
-                      className="text-[#6e9d7d]"
+                      size={16}
+                      className="shrink-0 text-[#6e9d7d]"
                       aria-hidden="true"
                     />
                     {item}
-                  </span>
+                  </div>
                 )
               )}
             </div>
           </div>
 
-          <div className="relative mx-auto w-full max-w-xl">
-            <div className="rounded-lg border border-[#eadfd7] bg-white p-4 shadow-sm sm:p-5">
-              <div className="flex items-center justify-between gap-4 border-b border-[#eee5dd] pb-4">
-                <div className="flex items-center gap-3">
-                  <Image
-                    src="/medifamily-logo-symbol.png"
-                    alt=""
-                    width={760}
-                    height={650}
-                    className="h-12 w-auto object-contain"
-                  />
-                  <div>
-                    <p className="text-sm font-semibold text-[#29302d]">
-                      Dashboard famiglia
-                    </p>
-                    <p className="text-xs text-[#7a6f68]">
-                      Oggi, prossimi 7 giorni
-                    </p>
-                  </div>
+          <div className="mx-auto w-full max-w-xl">
+            <div className="overflow-hidden rounded-lg border border-[#eadfd7] bg-white shadow-sm">
+              <div className="flex h-11 items-center justify-between border-b border-[#eee5dd] bg-[#fffdfb] px-4">
+                <div className="flex items-center gap-1.5">
+                  <span className="size-2.5 rounded-full bg-[#ef8580]" />
+                  <span className="size-2.5 rounded-full bg-[#f4cb66]" />
+                  <span className="size-2.5 rounded-full bg-[#82c79b]" />
                 </div>
-                <span className="rounded-md bg-[#f6fbf7] px-3 py-1 text-xs font-semibold text-[#315a45]">
-                  4 profili
+                <span className="text-xs font-semibold uppercase text-[#947b6a]">
+                  MediFamily dashboard
                 </span>
               </div>
 
-              <div className="mt-4 grid gap-3 sm:grid-cols-[0.78fr_1.22fr]">
-                <div className="space-y-2">
-                  {family.map((name, index) => (
-                    <div
-                      className="flex items-center gap-2 rounded-lg bg-[#fffaf6] p-2"
-                      key={name}
-                    >
-                      <span
-                        className={[
-                          "flex size-8 items-center justify-center rounded-md text-sm font-semibold text-[#29302d]",
-                          [
-                            "bg-[#f9d8d6]",
-                            "bg-[#d9eadf]",
-                            "bg-[#dbe7fb]",
-                            "bg-[#f7e2bf]",
-                          ][index],
-                        ].join(" ")}
-                      >
-                        {name[0]}
-                      </span>
-                      <span className="truncate text-sm font-medium text-[#4f5c55]">
-                        {name}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="space-y-3">
-                  {[
-                    {
-                      icon: CalendarDays,
-                      title: "Visita cardiologica",
-                      text: "Ticket da pagare entro venerdi",
-                    },
-                    {
-                      icon: Pill,
-                      title: "Terapia serale",
-                      text: "2 farmaci da confermare",
-                    },
-                    {
-                      icon: FileText,
-                      title: "Ricetta da rinnovare",
-                      text: "Promemoria automatico salvato",
-                    },
-                  ].map((item) => {
-                    const Icon = item.icon;
-
-                    return (
+              <div className="grid min-h-[360px] sm:grid-cols-[0.8fr_1.2fr]">
+                <aside className="border-b border-[#eee5dd] bg-[#fffaf6] p-4 sm:border-b-0 sm:border-r">
+                  <div className="mb-4 flex items-center justify-between">
+                    <p className="text-sm font-semibold text-[#29302d]">
+                      Nucleo
+                    </p>
+                    <span className="rounded-md bg-white px-2 py-1 text-xs font-semibold text-[#315a45]">
+                      4
+                    </span>
+                  </div>
+                  <div className="space-y-2">
+                    {family.map((member) => (
                       <div
-                        className="rounded-lg border border-[#eadfd7] bg-white p-3 shadow-sm"
-                        key={item.title}
+                        className="flex items-center gap-2 rounded-md bg-white px-2 py-2"
+                        key={member.name}
                       >
-                        <div className="flex items-start gap-3">
-                          <span className="flex size-9 shrink-0 items-center justify-center rounded-md bg-[#f6fbf7] text-[#315a45]">
+                        <span
+                          className={`flex size-8 items-center justify-center rounded-md text-sm font-semibold text-[#29302d] ${member.tone}`}
+                        >
+                          {member.name[0]}
+                        </span>
+                        <span className="min-w-0">
+                          <span className="block truncate text-sm font-semibold text-[#29302d]">
+                            {member.name}
+                          </span>
+                          <span className="block truncate text-xs text-[#7a6f68]">
+                            {member.role}
+                          </span>
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </aside>
+
+                <div className="p-4">
+                  <div className="mb-4 flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-sm font-semibold text-[#29302d]">
+                        Oggi
+                      </p>
+                      <p className="text-xs text-[#7a6f68]">
+                        Prossimi promemoria
+                      </p>
+                    </div>
+                    <span className="rounded-md bg-[#f6fbf7] px-2 py-1 text-xs font-semibold text-[#315a45]">
+                      In ordine
+                    </span>
+                  </div>
+
+                  <div className="divide-y divide-[#eee5dd] rounded-md border border-[#eee5dd]">
+                    {previewItems.map((item) => {
+                      const Icon = item.icon;
+
+                      return (
+                        <div
+                          className="grid grid-cols-[auto_1fr_auto] items-center gap-3 p-3"
+                          key={item.title}
+                        >
+                          <span className="flex size-9 items-center justify-center rounded-md bg-[#f6fbf7] text-[#315a45]">
                             <Icon size={17} aria-hidden="true" />
                           </span>
-                          <div>
-                            <p className="text-sm font-semibold text-[#29302d]">
+                          <span className="min-w-0">
+                            <span className="block truncate text-sm font-semibold text-[#29302d]">
                               {item.title}
-                            </p>
-                            <p className="mt-1 text-xs leading-5 text-[#6c5f57]">
-                              {item.text}
-                            </p>
-                          </div>
+                            </span>
+                            <span className="block truncate text-xs text-[#6c5f57]">
+                              {item.detail}
+                            </span>
+                          </span>
+                          <span className="rounded-md bg-[#fffaf6] px-2 py-1 text-xs font-semibold text-[#7a6f68]">
+                            {item.status}
+                          </span>
                         </div>
+                      );
+                    })}
+                  </div>
+
+                  <div className="mt-4 grid grid-cols-3 gap-2 text-center">
+                    {[
+                      ["3", "visite"],
+                      ["2", "terapie"],
+                      ["8", "documenti"],
+                    ].map(([value, label]) => (
+                      <div
+                        className="rounded-md border border-[#eee5dd] px-2 py-3"
+                        key={label}
+                      >
+                        <p className="text-lg font-semibold text-[#29302d]">
+                          {value}
+                        </p>
+                        <p className="text-xs text-[#7a6f68]">{label}</p>
                       </div>
-                    );
-                  })}
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>
+
           </div>
         </section>
 
-        <section className="grid gap-3 border-t border-[#eadfd7] py-6 md:grid-cols-3">
+        <section className="grid gap-4 border-t border-[#eadfd7] py-7 md:grid-cols-3">
           {features.map((feature) => {
             const Icon = feature.icon;
 
