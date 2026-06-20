@@ -2,7 +2,6 @@ import Link from "next/link";
 import Image from "next/image";
 import {
   ArrowRight,
-  Bell,
   CalendarDays,
   CheckCircle2,
   ChevronDown,
@@ -32,6 +31,7 @@ import { GlobalSearch } from "@/app/components/GlobalSearch";
 import { MemberAvatar } from "@/app/components/MemberAvatar";
 import { ProfileImageControl } from "@/app/components/ProfileImageControl";
 import { OnboardingAssistant } from "@/app/components/OnboardingAssistant";
+import { NotificationBell } from "@/app/components/NotificationBell";
 import type { SearchItem } from "@/app/components/GlobalSearch";
 import {
   displayFamilyMemberName,
@@ -45,6 +45,11 @@ import {
   isMedicationDueOnDate,
   medicationTimeSortValue,
 } from "@/app/lib/medications";
+import {
+  applyNotificationStates,
+  buildNotifications,
+  unreadNotificationCount,
+} from "@/app/lib/notifications";
 
 type DashboardVisit = {
   id: string;
@@ -975,6 +980,11 @@ export default async function Home() {
     visibleMedications,
     visibleDocuments
   );
+  const notifications = await applyNotificationStates(
+    user.id,
+    buildNotifications(visibleVisits, visibleMedications)
+  );
+  const unreadCount = unreadNotificationCount(notifications);
   const paymentCount = visits.filter(
     (visit) => visit.status === "booked" && visit.paymentDueDate
   ).length;
@@ -1054,13 +1064,7 @@ export default async function Home() {
           </Link>
 
           <div className="flex items-center gap-2">
-            <Link
-              className="hidden h-10 items-center gap-2 rounded-md border border-[#e3d7cf] bg-white px-3 text-sm font-medium text-[#4f5c55] shadow-sm transition hover:bg-[#f8f1ec] md:flex"
-              href="/reminders"
-            >
-              <Bell size={17} aria-hidden="true" />
-              <span className="hidden min-[390px]:inline">Promemoria</span>
-            </Link>
+            <NotificationBell unreadCount={unreadCount} />
             {canEdit ? <VisitForm familyMembers={memberNames} /> : null}
           </div>
         </div>

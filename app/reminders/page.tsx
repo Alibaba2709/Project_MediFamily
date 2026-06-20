@@ -8,16 +8,16 @@ import {
   normalizeFamilyMemberNames,
   type FamilyMember,
 } from "@/app/lib/family";
-import {
-  getMedicationTimes,
-  isMedicationDueOnDate,
-} from "@/app/lib/medications";
 import { Visit } from "@/app/models/Visit";
-import { Recipe } from "@/app/models/Recipe";
 import { Medication } from "@/app/models/Medication";
-import { HealthDocument } from "@/app/models/HealthDocument";
 import { ReminderFilters } from "@/app/components/ReminderFilters";
 import type { ReminderViewItem } from "@/app/components/ReminderFilters";
+import {
+  applyNotificationStates,
+  buildNotifications,
+} from "@/app/lib/notifications";
+
+const PAGE_SIZE = 10;
 
 type StoredVisit = {
   _id: { toString: () => string };
@@ -28,13 +28,6 @@ type StoredVisit = {
   paymentDueDate?: Date;
   cancellationDueDate?: Date;
   status?: "booked" | "paid" | "cancelled" | "completed";
-};
-
-type StoredRecipe = {
-  _id: { toString: () => string };
-  memberName: string;
-  medicationName: string;
-  renewalDate?: Date;
 };
 
 type StoredMedication = {
@@ -50,230 +43,74 @@ type StoredMedication = {
   frequency?: string;
   weekdays?: number[];
   schedule?: string;
+  startDate?: Date;
   endDate?: Date;
   active: boolean;
 };
 
-type StoredDocument = {
-  visitId?: string;
-};
-
-function formatDate(value?: string) {
-  if (!value) return "Non impostata";
-
-  return new Intl.DateTimeFormat("it-IT", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  }).format(new Date(value));
-}
-
-function startOfDay(value: Date) {
-  const date = new Date(value);
-  date.setHours(0, 0, 0, 0);
-  return date;
-}
-
-function withinNextDays(value: string, days: number) {
-  const today = startOfDay(new Date());
-  const limit = new Date(today);
-  limit.setDate(limit.getDate() + days);
-  const date = startOfDay(new Date(value));
-
-  return date >= today && date <= limit;
-}
-
-function todayAtTime(value?: string) {
-  const date = new Date();
-  const [hours, minutes] = (value ?? "").split(":").map(Number);
-
-  if (Number.isFinite(hours) && Number.isFinite(minutes)) {
-    date.setHours(hours, minutes, 0, 0);
-  }
-
-  return date.toISOString();
-}
-
-async function getReminders(
+async function getNotifications(
+  userId: string,
   familyId: string,
   members: FamilyMember[]
 ): Promise<ReminderViewItem[]> {
   await connectMongo();
 
-  const [visits, recipes, medications, documents] = await Promise.all([
+  const [visits, medications] = await Promise.all([
     Visit.find({ familyId }).sort({ visitDate: 1 }).lean<StoredVisit[]>(),
-    Recipe.find({ familyId }).sort({ renewalDate: 1 }).lean<StoredRecipe[]>(),
     Medication.find({ familyId, active: true })
       .sort({ memberName: 1, name: 1 })
       .lean<StoredMedication[]>(),
-    HealthDocument.find({ familyId }).select("visitId").lean<StoredDocument[]>(),
   ]);
-  const linkedVisitIds = new Set(
-    documents.map((document) => document.visitId).filter(Boolean)
+
+  const notifications = buildNotifications(
+    visits.map((visit) => ({
+      id: visit._id.toString(),
+      memberName: displayFamilyMemberName(visit.memberName, members),
+      title: visit.title,
+      visitDate: visit.visitDate.toISOString(),
+      visitTime: visit.visitTime,
+      paymentDueDate: visit.paymentDueDate?.toISOString(),
+      cancellationDueDate: visit.cancellationDueDate?.toISOString(),
+      status: visit.status ?? "booked",
+    })),
+    medications.map((medication) => ({
+      id: medication._id.toString(),
+      memberName: displayFamilyMemberName(medication.memberName, members),
+      name: medication.name,
+      dosage: medication.dosage,
+      intakeTime: medication.intakeTime,
+      intakeTimes: medication.intakeTimes,
+      frequency: medication.frequency,
+      weekdays: medication.weekdays,
+      schedule: medication.schedule,
+      startDate: medication.startDate?.toISOString(),
+      endDate: medication.endDate?.toISOString(),
+      active: medication.active,
+    }))
   );
 
-  const visitReminders = visits.flatMap((visit) => {
-    const status = visit.status ?? "booked";
-    if (status !== "booked") return [];
-
-    const visitDate = visit.visitDate.toISOString();
-    const items: ReminderViewItem[] = [];
-
-    if (withinNextDays(visitDate, 3)) {
-      const memberName = displayFamilyMemberName(visit.memberName, members);
-
-      items.push({
-        date: visitDate,
-        detail: `${memberName} · ${visit.title}${
-          visit.visitTime ? ` · ${visit.visitTime}` : ""
-        }`,
-        href: "/calendar",
-        memberName,
-        title: "Visita imminente",
-        tone: "border-[#d5e0d8] bg-[#f6fbf7] text-[#315a45]",
-        type: "visit",
-      });
-    }
-
-    if (visit.paymentDueDate) {
-      const paymentDate = visit.paymentDueDate.toISOString();
-      const memberName = displayFamilyMemberName(visit.memberName, members);
-
-      items.push({
-        date: paymentDate,
-        detail: `${memberName} · ${visit.title} · entro ${formatDate(
-          paymentDate
-        )}`,
-        href: "/payments",
-        memberName,
-        title: "Pagamento visita",
-        tone: "border-[#f1d8cf] bg-[#fff7f5] text-[#7f5146]",
-        type: "payment",
-      });
-    }
-
-    if (visit.cancellationDueDate) {
-      const cancellationDate = visit.cancellationDueDate.toISOString();
-      const memberName = displayFamilyMemberName(visit.memberName, members);
-
-      items.push({
-        date: cancellationDate,
-        detail: `${memberName} · ${visit.title} · entro ${formatDate(
-          cancellationDate
-        )}`,
-        href: "/calendar",
-        memberName,
-        title: "Termine disdetta",
-        tone: "border-[#f0d3a6] bg-[#fff8e9] text-[#7a5b2f]",
-        type: "cancellation",
-      });
-    }
-
-    if (withinNextDays(visitDate, 7) && !linkedVisitIds.has(visit._id.toString())) {
-      const memberName = displayFamilyMemberName(visit.memberName, members);
-
-      items.push({
-        date: visitDate,
-        detail: `${memberName} · ${visit.title} · controlla ricetta o referti`,
-        href: "/documents",
-        memberName,
-        title: "Documenti da collegare",
-        tone: "border-[#dbe7fb] bg-[#f7faff] text-[#375479]",
-        type: "document",
-      });
-    }
-
-    return items;
-  });
-
-  const recipeReminders = recipes
-    .filter((recipe) => recipe.renewalDate)
-    .map((recipe) => {
-      const renewalDate = recipe.renewalDate?.toISOString() as string;
-
-      return {
-        date: renewalDate,
-        detail: `${displayFamilyMemberName(
-          recipe.memberName,
-          members
-        )} · ${recipe.medicationName} · entro ${formatDate(
-          renewalDate
-        )}`,
-        href: "/recipes",
-        memberName: displayFamilyMemberName(recipe.memberName, members),
-        title: "Rinnovo ricetta",
-        tone: "border-[#d7d0ec] bg-[#faf7ff] text-[#5d527b]",
-        type: "recipe" as const,
-      };
-    });
-
-  const medicationReminders = medications.flatMap((medication) => {
-    const memberName = displayFamilyMemberName(medication.memberName, members);
-    const endDate = medication.endDate?.toISOString();
-    const items: ReminderViewItem[] = [];
-
-    if (endDate && withinNextDays(endDate, 7)) {
-      items.push({
-        date: endDate,
-        detail: `${memberName} · ${medication.name} · fine ${formatDate(
-          endDate
-        )}`,
-        href: `/medications#medication-${medication._id.toString()}`,
-        memberName,
-        title: "Fine terapia",
-        tone: "border-[#f0d3a6] bg-[#fff8e9] text-[#7a5b2f]",
-        type: "medication" as const,
-      });
-    }
-
-    if (isMedicationDueOnDate(medication)) {
-      items.push(
-        ...getMedicationTimes(medication).map((time) => ({
-          date: todayAtTime(time),
-          detail: `${memberName} · ${medication.name}${
-            medication.dosage ? ` · ${medication.dosage}` : ""
-          } · ${time}${medication.schedule ? ` · ${medication.schedule}` : ""}`,
-          href: `/medications#medication-${medication._id.toString()}`,
-          memberName,
-          title: "Farmaco attivo",
-          tone: "border-[#d5e0d8] bg-[#f6fbf7] text-[#315a45]",
-          type: "medication" as const,
-        }))
-      );
-    }
-
-    if (
-      medication.stockQuantity !== undefined &&
-      medication.lowStockThreshold !== undefined &&
-      medication.stockQuantity <= medication.lowStockThreshold
-    ) {
-      items.push({
-        date: new Date().toISOString(),
-        detail: `${memberName} · ${medication.name} · ${medication.stockQuantity} ${
-          medication.stockUnit || "dosi"
-        } rimaste`,
-        href: `/medications#medication-${medication._id.toString()}`,
-        memberName,
-        title: "Scorta farmaco bassa",
-        tone: "border-[#f1d8cf] bg-[#fff7f5] text-[#7f5146]",
-        type: "medication" as const,
-      });
-    }
-
-    return items;
-  });
-
-  const today = startOfDay(new Date());
-
-  return [...visitReminders, ...recipeReminders, ...medicationReminders]
-    .filter((reminder) => new Date(reminder.date) >= today)
-    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  return applyNotificationStates(userId, notifications);
 }
 
-export default async function RemindersPage() {
+type RemindersPageProps = {
+  searchParams?: Promise<{
+    page?: string;
+  }>;
+};
+
+export default async function RemindersPage({ searchParams }: RemindersPageProps) {
   const user = await requireVerifiedUser();
+  const params = await searchParams;
+  const currentPage = Math.max(1, Number(params?.page ?? 1) || 1);
   const members = await getFamilyMembers(user);
-  const reminders = await getReminders(user.familyId, members);
+  const reminders = await getNotifications(user.id, user.familyId, members);
+  const unreadCount = reminders.filter((reminder) => !reminder.readAt).length;
+  const totalPages = Math.max(1, Math.ceil(reminders.length / PAGE_SIZE));
+  const page = Math.min(currentPage, totalPages);
+  const paginatedReminders = reminders.slice(
+    (page - 1) * PAGE_SIZE,
+    page * PAGE_SIZE
+  );
   const reminderMemberNames = normalizeFamilyMemberNames(
     [
       ...members.map((member) => member.name),
@@ -302,12 +139,19 @@ export default async function RemindersPage() {
               <p className="text-sm font-medium text-[#947b6a]">
                 Agenda intelligente
               </p>
-              <h1 className="mt-1 text-3xl font-semibold text-[#29302d]">
-                Promemoria
-              </h1>
+              <div className="mt-1 flex flex-wrap items-center gap-2">
+                <h1 className="text-3xl font-semibold text-[#29302d]">
+                  Notifiche
+                </h1>
+                {unreadCount > 0 ? (
+                  <span className="rounded-md bg-[#ef8580] px-2 py-1 text-xs font-bold text-white">
+                    {unreadCount} non lette
+                  </span>
+                ) : null}
+              </div>
               <p className="mt-3 max-w-2xl text-sm leading-6 text-[#6c5f57]">
-                Tutte le cose da non perdere: visite imminenti, pagamenti,
-                disdette, ricette e documenti da collegare.
+                Campanella del nucleo: pagamenti e disdette in scadenza domani,
+                più i farmaci da ricordare oggi.
               </p>
             </div>
           </div>
@@ -315,8 +159,32 @@ export default async function RemindersPage() {
 
         <ReminderFilters
           members={reminderMemberNames}
-          reminders={reminders}
+          reminders={paginatedReminders}
         />
+
+        {reminders.length > PAGE_SIZE ? (
+          <nav className="flex items-center justify-between gap-3 rounded-lg border border-[#eadfd7] bg-white p-3 text-sm font-semibold text-[#4f5c55] shadow-sm">
+            <Link
+              className={`rounded-md border border-[#e3d7cf] px-3 py-2 transition hover:bg-[#f8f1ec] ${
+                page <= 1 ? "pointer-events-none opacity-40" : ""
+              }`}
+              href={`/reminders?page=${page - 1}`}
+            >
+              Precedenti 10
+            </Link>
+            <span>
+              Pagina {page} di {totalPages}
+            </span>
+            <Link
+              className={`rounded-md border border-[#e3d7cf] px-3 py-2 transition hover:bg-[#f8f1ec] ${
+                page >= totalPages ? "pointer-events-none opacity-40" : ""
+              }`}
+              href={`/reminders?page=${page + 1}`}
+            >
+              Successive 10
+            </Link>
+          </nav>
+        ) : null}
       </div>
     </main>
   );

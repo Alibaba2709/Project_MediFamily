@@ -6,7 +6,7 @@ const SESSION_COOKIE = "medifamily_session";
 
 const navItems = [
   { href: "/", label: "Home", icon: Home },
-  { href: "/reminders", label: "Promemoria", icon: Bell },
+  { href: "/reminders", label: "Notifiche", icon: Bell },
   { href: "/archive", label: "Archivio", icon: FileText },
   { href: "/settings", label: "Famiglia", icon: Users },
 ];

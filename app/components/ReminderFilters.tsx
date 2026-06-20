@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import {
   Bell,
   CalendarDays,
@@ -10,12 +9,15 @@ import {
   FileText,
   Pill,
 } from "lucide-react";
+import { NotificationLink } from "@/app/components/NotificationLink";
 
 export type ReminderViewItem = {
+  id: string;
   date: string;
   detail: string;
   href: string;
   memberName: string;
+  readAt?: string;
   title: string;
   tone: string;
   type:
@@ -113,10 +115,11 @@ export function ReminderFilters({ members, reminders }: ReminderFiltersProps) {
             const Icon = icons[reminder.type];
 
             return (
-              <Link
+              <NotificationLink
                 className={`rounded-lg border p-4 shadow-sm transition hover:bg-white ${reminder.tone}`}
                 href={reminder.href}
                 key={`${reminder.title}-${reminder.detail}-${reminder.date}`}
+                notificationId={reminder.id}
               >
                 <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
                   <div className="flex items-start gap-3">
@@ -127,6 +130,15 @@ export function ReminderFilters({ members, reminders }: ReminderFiltersProps) {
                       <h2 className="font-semibold text-[#29302d]">
                         {reminder.title}
                       </h2>
+                      <span
+                        className={`mt-1 inline-flex rounded-md px-2 py-1 text-xs font-semibold ${
+                          reminder.readAt
+                            ? "bg-white/70 text-[#7a6f68]"
+                            : "bg-[#ef8580] text-white"
+                        }`}
+                      >
+                        {reminder.readAt ? "Letta" : "Nuova"}
+                      </span>
                       <p className="mt-1 text-sm leading-6 text-[#6c5f57]">
                         {reminder.detail}
                       </p>
@@ -136,7 +148,7 @@ export function ReminderFilters({ members, reminders }: ReminderFiltersProps) {
                     {formatDate(reminder.date)}
                   </span>
                 </div>
-              </Link>
+              </NotificationLink>
             );
           })}
         </section>
