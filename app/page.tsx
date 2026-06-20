@@ -27,7 +27,7 @@ import { HealthDocument } from "@/app/models/HealthDocument";
 import { VisitForm } from "@/app/components/VisitForm";
 import { LogoutButton } from "@/app/components/LogoutButton";
 import { AddFamilyMemberForm } from "@/app/components/AddFamilyMemberForm";
-import { CancelVisitButton } from "@/app/components/CancelVisitButton";
+import { VisitStatusActions } from "@/app/components/VisitStatusActions";
 import { GlobalSearch } from "@/app/components/GlobalSearch";
 import { MemberAvatar } from "@/app/components/MemberAvatar";
 import { ProfileImageControl } from "@/app/components/ProfileImageControl";
@@ -170,33 +170,6 @@ type UrgencyItem = {
   href: string;
 };
 
-function visitDateTime(value: string, visitTime?: string) {
-  const date = new Date(value);
-  const [hours, minutes] = (visitTime ?? "").split(":").map(Number);
-
-  if (Number.isFinite(hours) && Number.isFinite(minutes)) {
-    date.setHours(hours, minutes, 0, 0);
-  } else {
-    date.setHours(23, 59, 59, 999);
-  }
-
-  return date;
-}
-
-function effectiveVisitStatus(
-  status: DashboardVisit["status"],
-  visitDate: string,
-  visitTime?: string
-): DashboardVisit["status"] {
-  if (status === "cancelled" || status === "completed") return status;
-
-  if (visitDateTime(visitDate, visitTime) < new Date()) {
-    return "completed";
-  }
-
-  return status;
-}
-
 const healthArchiveLinks = [
   {
     title: "Documenti",
@@ -235,28 +208,6 @@ async function getVisits(familyId: string): Promise<DashboardVisit[]> {
     const visits = await Visit.find({ familyId })
       .sort({ visitDate: 1 })
       .lean<StoredVisit[]>();
-    const completedVisitIds = visits
-      .filter((visit) => {
-        const status = visit.status ?? "booked";
-
-        return (
-          status !== "completed" &&
-          status !== "cancelled" &&
-          effectiveVisitStatus(
-            status,
-            visit.visitDate.toISOString(),
-            visit.visitTime
-          ) === "completed"
-        );
-      })
-      .map((visit) => visit._id);
-
-    if (completedVisitIds.length > 0) {
-      await Visit.updateMany(
-        { _id: { $in: completedVisitIds }, familyId },
-        { $set: { status: "completed" } }
-      );
-    }
 
     return visits.map((visit) => {
       const visitDate = visit.visitDate.toISOString();
@@ -274,7 +225,7 @@ async function getVisits(familyId: string): Promise<DashboardVisit[]> {
         cancellationDueDate: visit.cancellationDueDate?.toISOString(),
         price: visit.price,
         notes: visit.notes,
-        status: effectiveVisitStatus(status, visitDate, visit.visitTime),
+        status,
       };
     });
   } catch {
@@ -1545,8 +1496,10 @@ export default async function Home() {
                                   familyMembers={memberNames}
                                 />
                               ) : null}
-                              {canEdit && visit.status === "booked" ? (
-                                <CancelVisitButton
+                              {canEdit &&
+                              (visit.status === "booked" ||
+                                visit.status === "paid") ? (
+                                <VisitStatusActions
                                   visitId={visit.id}
                                   label={visit.title}
                                 />

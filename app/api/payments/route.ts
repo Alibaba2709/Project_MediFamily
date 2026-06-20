@@ -56,6 +56,19 @@ export async function POST(request: Request) {
     );
   }
 
+  const existingReceipt = await HealthDocument.exists({
+    familyId: user.familyId,
+    visitId,
+    category: "pagamento",
+  });
+
+  if (existingReceipt) {
+    return NextResponse.json(
+      { error: "Questa visita ha gia una ricevuta collegata." },
+      { status: 409 }
+    );
+  }
+
   const document = await HealthDocument.create({
     familyId: user.familyId,
     memberName: visit.memberName,

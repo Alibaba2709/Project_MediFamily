@@ -3,6 +3,7 @@ import { ArrowLeft, CalendarDays, Clock3 } from "lucide-react";
 import { connectMongo } from "@/app/lib/mongodb";
 import { requireVerifiedUser } from "@/app/lib/auth";
 import { Visit } from "@/app/models/Visit";
+import { VisitStatusActions } from "@/app/components/VisitStatusActions";
 
 type StoredVisit = {
   _id: { toString: () => string };
@@ -46,8 +47,31 @@ function formatDate(value: string) {
   }).format(new Date(value));
 }
 
+function statusLabel(status: StoredVisit["status"]) {
+  const labels = {
+    booked: "Prenotata",
+    paid: "Pagata",
+    cancelled: "Annullata",
+    completed: "Effettuata",
+  };
+
+  return labels[status ?? "booked"];
+}
+
+function statusTone(status: StoredVisit["status"]) {
+  const tones = {
+    booked: "bg-[#f7e2bf] text-[#7a5b2f]",
+    paid: "bg-[#d9eadf] text-[#315a45]",
+    cancelled: "bg-[#fff7f5] text-[#9f4d46]",
+    completed: "bg-[#d9eadf] text-[#315a45]",
+  };
+
+  return tones[status ?? "booked"];
+}
+
 export default async function CalendarPage() {
   const user = await requireVerifiedUser();
+  const canEdit = user.role !== "viewer";
   const visits = await getVisits(user.familyId);
 
   return (
@@ -87,11 +111,20 @@ export default async function CalendarPage() {
                 className="rounded-lg border border-[#eadfd7] bg-white p-4 shadow-sm"
                 key={visit.id}
               >
-                <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
+                <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-start">
                   <div>
-                    <h2 className="font-semibold text-[#29302d]">
-                      {visit.title}
-                    </h2>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h2 className="font-semibold text-[#29302d]">
+                        {visit.title}
+                      </h2>
+                      <span
+                        className={`rounded-md px-2 py-1 text-xs font-semibold ${statusTone(
+                          visit.status
+                        )}`}
+                      >
+                        {statusLabel(visit.status)}
+                      </span>
+                    </div>
                     <p className="mt-1 text-sm text-[#6c5f57]">
                       {visit.memberName}
                       {visit.location ? ` · ${visit.location}` : ""}
@@ -105,10 +138,19 @@ export default async function CalendarPage() {
                       </p>
                     ) : null}
                   </div>
-                  <div className="flex items-center gap-2 text-sm font-semibold text-[#315a45]">
-                    <Clock3 size={17} aria-hidden="true" />
-                    {formatDate(visit.visitDate)}
-                    {visit.visitTime ? ` · ${visit.visitTime}` : ""}
+                  <div className="flex flex-col gap-3 sm:items-end">
+                    <div className="flex items-center gap-2 text-sm font-semibold text-[#315a45]">
+                      <Clock3 size={17} aria-hidden="true" />
+                      {formatDate(visit.visitDate)}
+                      {visit.visitTime ? ` · ${visit.visitTime}` : ""}
+                    </div>
+                    {canEdit &&
+                    (visit.status === "booked" || visit.status === "paid") ? (
+                      <VisitStatusActions
+                        visitId={visit.id}
+                        label={visit.title}
+                      />
+                    ) : null}
                   </div>
                 </div>
               </article>

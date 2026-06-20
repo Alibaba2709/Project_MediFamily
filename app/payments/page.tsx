@@ -108,6 +108,12 @@ export default async function PaymentsPage() {
   const canEdit = user.role !== "viewer";
   const { receipts, visits } = await getPaymentData(user.familyId);
   const visitsById = new Map(visits.map((visit) => [visit.id, visit]));
+  const receiptVisitIds = new Set(
+    receipts.map((receipt) => receipt.visitId).filter(Boolean)
+  );
+  const visitsWithoutReceipt = visits.filter(
+    (visit) => !receiptVisitIds.has(visit.id)
+  );
 
   return (
     <main className="min-h-screen bg-[#fffaf6] px-5 py-6 text-[#2f3330] sm:px-8">
@@ -120,7 +126,9 @@ export default async function PaymentsPage() {
             <ArrowLeft size={17} aria-hidden="true" />
             Dashboard
           </Link>
-          {canEdit ? <PaymentReceiptForm visits={visits} /> : null}
+          {canEdit && visitsWithoutReceipt.length > 0 ? (
+            <PaymentReceiptForm visits={visitsWithoutReceipt} />
+          ) : null}
         </div>
 
         <section className="rounded-lg border border-[#eadfd7] bg-white p-5 shadow-sm">
@@ -146,6 +154,14 @@ export default async function PaymentsPage() {
         {visits.length === 0 ? (
           <section className="rounded-lg border border-dashed border-[#d9cfc6] bg-white p-4 text-sm text-[#6c5f57] shadow-sm">
             Non ci sono visite a cui allegare una ricevuta.
+          </section>
+        ) : null}
+
+        {visits.length > 0 && visitsWithoutReceipt.length === 0 ? (
+          <section className="rounded-lg border border-[#d5e0d8] bg-[#f6fbf7] p-4 text-sm font-medium text-[#315a45] shadow-sm">
+            Tutte le visite hanno gia una ricevuta collegata. Se elimini una
+            ricevuta, quella visita tornera disponibile per un nuovo
+            caricamento.
           </section>
         ) : null}
 
