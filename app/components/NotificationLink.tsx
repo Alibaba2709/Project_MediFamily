@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { MouseEvent, ReactNode } from "react";
+import { ReactNode } from "react";
 
 type NotificationLinkProps = {
   children: ReactNode;
@@ -16,7 +16,7 @@ export function NotificationLink({
   href,
   notificationId,
 }: NotificationLinkProps) {
-  function markAsRead(_event: MouseEvent<HTMLAnchorElement>) {
+  function markAsRead() {
     fetch("/api/notifications/read", {
       body: JSON.stringify({ notificationId }),
       headers: { "Content-Type": "application/json" },
