@@ -12,6 +12,7 @@ import { Visit } from "@/app/models/Visit";
 import { Medication } from "@/app/models/Medication";
 import { ReminderFilters } from "@/app/components/ReminderFilters";
 import type { ReminderViewItem } from "@/app/components/ReminderFilters";
+import { MarkAllNotificationsReadButton } from "@/app/components/MarkAllNotificationsReadButton";
 import {
   applyNotificationStates,
   buildNotifications,
@@ -105,6 +106,9 @@ export default async function RemindersPage({ searchParams }: RemindersPageProps
   const members = await getFamilyMembers(user);
   const reminders = await getNotifications(user.id, user.familyId, members);
   const unreadCount = reminders.filter((reminder) => !reminder.readAt).length;
+  const unreadNotificationIds = reminders
+    .filter((reminder) => !reminder.readAt)
+    .map((reminder) => reminder.id);
   const totalPages = Math.max(1, Math.ceil(reminders.length / PAGE_SIZE));
   const page = Math.min(currentPage, totalPages);
   const paginatedReminders = reminders.slice(
@@ -144,9 +148,14 @@ export default async function RemindersPage({ searchParams }: RemindersPageProps
                   Notifiche
                 </h1>
                 {unreadCount > 0 ? (
-                  <span className="rounded-md bg-[#ef8580] px-2 py-1 text-xs font-bold text-white">
-                    {unreadCount} non lette
-                  </span>
+                  <>
+                    <span className="rounded-md bg-[#ef8580] px-2 py-1 text-xs font-bold text-white">
+                      {unreadCount} non lette
+                    </span>
+                    <MarkAllNotificationsReadButton
+                      notificationIds={unreadNotificationIds}
+                    />
+                  </>
                 ) : null}
               </div>
               <p className="mt-3 max-w-2xl text-sm leading-6 text-[#6c5f57]">
