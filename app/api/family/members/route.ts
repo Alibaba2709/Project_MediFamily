@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import mongoose from "mongoose";
 import { getCurrentUser } from "@/app/lib/auth";
 import { connectMongo } from "@/app/lib/mongodb";
-import { addanteMembers, getFamilyMembers, getFamilyPlan } from "@/app/lib/family";
+import { getFamilyMembers, getFamilyPlan } from "@/app/lib/family";
 import { canManageFamily, forbidden } from "@/app/lib/permissions";
 import { PREMIUM_MEMBER_LIMIT } from "@/app/lib/plans";
 
@@ -89,11 +89,7 @@ export async function POST(request: Request) {
     );
   }
 
-  const baseMembers =
-    user.familyId === "famiglia-addante"
-      ? addanteMembers.map(serializeMember)
-      : currentMembers.map(serializeMember);
-
+  const baseMembers = currentMembers.map(serializeMember);
   const nextMembers = [...baseMembers, { name, role }];
 
   await mongoose.connection.collection("families").updateOne(

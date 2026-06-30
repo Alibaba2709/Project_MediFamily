@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import mongoose from "mongoose";
 import { getCurrentUser } from "@/app/lib/auth";
 import { connectMongo } from "@/app/lib/mongodb";
-import { addanteMembers, getFamilyMembers } from "@/app/lib/family";
+import { getFamilyMembers } from "@/app/lib/family";
 import { canManageFamily, forbidden } from "@/app/lib/permissions";
 
 const MAX_IMAGE_BYTES = 120 * 1024;
@@ -194,11 +194,7 @@ export async function DELETE(_request: Request, context: RouteContext) {
   }
 
   const currentMembers = await getFamilyMembers(user);
-  const baseMembers =
-    user.familyId === "famiglia-addante"
-      ? addanteMembers
-      : currentMembers;
-  const nextMembers = baseMembers
+  const nextMembers = currentMembers
     .filter((member) => member.name !== decodedName)
     .map(serializeMember);
 
