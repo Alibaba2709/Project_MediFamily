@@ -1,42 +1,105 @@
-# Medifamily
+<div align="center">
 
-Medifamily is a full-stack web application designed to help families manage healthcare information in one place.
+<img src="public/logo.png" width="120"/>
 
-## Features
-- User authentication
-- Appointment management
-- Medication tracking
-- Medical documents
-- Reminders
-- Family profiles
+# 🩺 MediFamily
 
-## Tech Stack
-- React
-- Next.js
-- Node.js
-- MongoDB
-- Git/GitHub
-- Vercel
+### *La salute di chi ami, organizzata.*
 
-## Screenshots
+A modern **full-stack healthcare management web application** designed to help families organize appointments, medications, prescriptions and medical documents in one secure place.
 
-<img width="1470" height="835" alt="Screenshot 2026-06-30 at 12 37 26" src="https://github.com/user-attachments/assets/f0544ba9-7618-44f2-bd09-71728ad7145d" />
+![Next.js](https://img.shields.io/badge/Next.js-16-black?style=for-the-badge&logo=next.js)
+![React](https://img.shields.io/badge/React-19-61DAFB?style=for-the-badge&logo=react)
+![Node.js](https://img.shields.io/badge/Node.js-22-339933?style=for-the-badge&logo=node.js)
+![MongoDB](https://img.shields.io/badge/MongoDB-6-47A248?style=for-the-badge&logo=mongodb)
+![Tailwind CSS](https://img.shields.io/badge/TailwindCSS-4-38BDF8?style=for-the-badge&logo=tailwindcss)
+![License](https://img.shields.io/badge/license-MIT-success?style=for-the-badge)
 
-<img width="1469" height="832" alt="Screenshot 2026-06-30 at 12 37 55" src="https://github.com/user-attachments/assets/cb2b7918-8e72-4b89-82fd-371329288b97" />
+</div>
 
-<img width="1469" height="832" alt="Screenshot 2026-06-30 at 12 37 55" src="https://github.com/user-attachments/assets/fc2ee077-41b1-4d6b-b12f-f2c3cb4f2153" />
+---
 
+# ✨ Features
 
-## Live Demo
+- 👨‍👩‍👧 Family dashboard
+- 📅 Appointment management
+- 💊 Medication reminders
+- 📄 Medical documents archive
+- 🧾 Prescription management
+- 💳 Payment tracking
+- 🔔 Notifications
+- 🔐 Secure authentication
+- 📱 Responsive design
+
+---
+
+# 📸 Screenshots
+
+## Landing Page
+
+![Landing](docs/landing.png)
+
+---
+
+## Registration
+
+![Register](docs/register.png)
+
+---
+
+## Dashboard
+
+![Dashboard](docs/dashboard.png)
+
+---
+
+# 🛠 Tech Stack
+
+| Frontend | Backend | Database | Other |
+|-----------|----------|----------|-------|
+| React | Node.js | MongoDB | Git |
+| Next.js | API Routes | Mongoose | GitHub |
+| TailwindCSS | NextAuth | | Vercel |
+
+---
+
+# 🚀 Getting Started
+
+```bash
+git clone https://github.com/Alibaba2709/Project_MediFamily.git
+
+cd Project_MediFamily
+
+npm install
+
+npm run dev
+```
+
+---
+
+# 📂 Project Structure
+
+```
+app/
+components/
+lib/
+models/
+public/
+styles/
+types/
+```
+
+---
+
+# 🌍 Live Demo
 
 https://medifamilyapp.it
 
-## Installation
+---
 
-git clone ...
-npm install
-npm run dev
+# 👩‍💻 Author
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Rossana Addante
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+GitHub:
+https://github.com/Alibaba2709
