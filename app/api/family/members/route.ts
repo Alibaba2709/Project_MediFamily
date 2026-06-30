@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import mongoose from "mongoose";
 import { getCurrentUser } from "@/app/lib/auth";
 import { connectMongo } from "@/app/lib/mongodb";
-import { addanteMembers } from "@/app/lib/family";
 import { canManageFamily, forbidden } from "@/app/lib/permissions";
 import {
   buildFamilyPlanSummary,
@@ -51,19 +50,6 @@ function serializeMember(member: SerializableMember) {
   };
 }
 
-function fallbackMembersForFamily(user: { familyId: string; name: string }) {
-  if (user.familyId === "famiglia-addante") {
-    return addanteMembers.map(serializeMember);
-  }
-
-  return [
-    serializeMember({
-      name: user.name,
-      role: "Utente principale",
-    }),
-  ];
-}
-
 export async function POST(request: Request) {
   const user = await getCurrentUser();
 
@@ -88,14 +74,23 @@ export async function POST(request: Request) {
 
   const families = mongoose.connection.collection<StoredFamily>("families");
   const family = await families.findOne({ key: user.familyId });
-  const hasStoredMembers = Boolean(family?.members?.length);
-  const currentMembers = hasStoredMembers
-    ? (family?.members ?? []).map(serializeMember)
-    : fallbackMembersForFamily(user);
+  const currentMembers = Array.isArray(family?.members)
+    ? family.members.map(serializeMember)
+    : [];
   const plan = buildFamilyPlanSummary(
     family?.plan,
     family?.subscriptionStatus
   );
+
+  if (!family || currentMembers.length === 0) {
+    return NextResponse.json(
+      {
+        error:
+          "Il nucleo familiare non ha membri salvati correttamente. Per sicurezza non ho modificato nulla: ricarica la pagina e riprova.",
+      },
+      { status: 409 }
+    );
+  }
 
   if (currentMembers.length >= plan.memberLimit) {
     return NextResponse.json(
@@ -117,24 +112,6 @@ export async function POST(request: Request) {
     return NextResponse.json(
       { error: "Questo membro esiste gia nel nucleo." },
       { status: 409 }
-    );
-  }
-
-  if (!hasStoredMembers) {
-    await families.updateOne(
-      { key: user.familyId },
-      {
-        $setOnInsert: {
-          key: user.familyId,
-          name: "Nucleo familiare",
-          createdAt: new Date(),
-        },
-        $set: {
-          members: currentMembers,
-          updatedAt: new Date(),
-        },
-      },
-      { upsert: true }
     );
   }
 
