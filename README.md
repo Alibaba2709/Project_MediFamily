@@ -1,6 +1,7 @@
 <div align="center">
 
-<img src="public/logo.png" width="120"/>
+<img width="1254" height="1254" alt="medifamily-logo" src="https://github.com/user-attachments/assets/b3f1b4dd-c813-419c-ab6b-4bd6c6924bc5" />
+
 
 # 🩺 MediFamily
 
@@ -37,19 +38,22 @@ A modern **full-stack healthcare management web application** designed to help f
 
 ## Landing Page
 
-![Landing](docs/landing.png)
+<img width="1470" height="835" alt="Screenshot 2026-06-30 at 12 37 26" src="https://github.com/user-attachments/assets/d44435ce-2d7e-4783-af3d-19dc09818b6f" />
+
 
 ---
 
 ## Registration
 
-![Register](docs/register.png)
+<img width="1469" height="832" alt="Screenshot 2026-06-30 at 12 37 55" src="https://github.com/user-attachments/assets/bd86bb30-e454-4511-a547-7069310ecaf8" />
+
 
 ---
 
 ## Dashboard
 
-![Dashboard](docs/dashboard.png)
+<img width="1470" height="836" alt="Screenshot 2026-06-30 at 12 38 36" src="https://github.com/user-attachments/assets/4f3eda37-63d2-4ad8-ac7a-77f66c0ef1ee" />
+
 
 ---
 
