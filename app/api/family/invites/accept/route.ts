@@ -7,6 +7,7 @@ import {
   validatePassword,
 } from "@/app/lib/auth";
 import { connectMongo } from "@/app/lib/mongodb";
+import { createFamilyMemberBackup } from "@/app/lib/familyMemberBackups";
 import { FamilyInvite } from "@/app/models/FamilyInvite";
 import { User } from "@/app/models/User";
 
@@ -55,6 +56,7 @@ export async function POST(request: Request) {
   }
 
   const existingUser = await User.findOne({ email: invite.email });
+  let acceptedUserId = "";
 
   if (existingUser) {
     existingUser.name = name;
@@ -63,7 +65,8 @@ export async function POST(request: Request) {
     existingUser.emailVerifiedAt = existingUser.emailVerifiedAt ?? new Date();
     existingUser.passwordHash = hashPassword(password);
     await existingUser.save();
-    await createSession(existingUser._id.toString());
+    acceptedUserId = existingUser._id.toString();
+    await createSession(acceptedUserId);
   } else {
     const user = await User.create({
       name,
@@ -73,7 +76,8 @@ export async function POST(request: Request) {
       role: invite.role,
       emailVerifiedAt: new Date(),
     });
-    await createSession(user._id.toString());
+    acceptedUserId = user._id.toString();
+    await createSession(acceptedUserId);
   }
 
   const currentMembers = await mongoose.connection
@@ -88,6 +92,15 @@ export async function POST(request: Request) {
 
   if (!alreadyListed) {
     const familiesCollection = mongoose.connection.collection("families");
+
+    await createFamilyMemberBackup({
+      familyId: invite.familyId,
+      members,
+      reason: "invite-accept",
+      targetMemberName: name,
+      userId: acceptedUserId,
+      userName: name,
+    });
 
     await familiesCollection.updateOne(
       { key: invite.familyId },

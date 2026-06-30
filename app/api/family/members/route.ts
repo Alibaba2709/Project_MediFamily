@@ -7,6 +7,7 @@ import {
   buildFamilyPlanSummary,
   PREMIUM_MEMBER_LIMIT,
 } from "@/app/lib/plans";
+import { createFamilyMemberBackup } from "@/app/lib/familyMemberBackups";
 
 type SerializableMember = {
   name: string;
@@ -114,6 +115,15 @@ export async function POST(request: Request) {
       { status: 409 }
     );
   }
+
+  await createFamilyMemberBackup({
+    familyId: user.familyId,
+    members: currentMembers,
+    reason: "add",
+    targetMemberName: name,
+    userId: user.id,
+    userName: user.name,
+  });
 
   const updateResult = await families.updateOne(
     {

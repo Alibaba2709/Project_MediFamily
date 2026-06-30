@@ -13,6 +13,8 @@ import { FamilyAccessManager } from "@/app/components/FamilyAccessManager";
 import { ProfileImageControl } from "@/app/components/ProfileImageControl";
 import { AccountSecurityForms } from "@/app/components/AccountSecurityForms";
 import { SubscriptionPlanCard } from "@/app/components/SubscriptionPlanCard";
+import { FamilyMemberBackupsPanel } from "@/app/components/FamilyMemberBackupsPanel";
+import { getFamilyMemberBackupViews } from "@/app/lib/familyMemberBackups";
 import { User } from "@/app/models/User";
 import { FamilyInvite } from "@/app/models/FamilyInvite";
 
@@ -77,6 +79,8 @@ export default async function SettingsPage() {
     user.role === "owner"
       ? await getFamilyAccessData(user.familyId)
       : { users: [], invites: [] };
+  const memberBackups =
+    user.role === "owner" ? await getFamilyMemberBackupViews(user.familyId) : [];
 
   return (
     <main className="min-h-screen bg-[#fffaf6] px-5 py-6 text-[#2f3330] sm:px-8">
@@ -184,6 +188,10 @@ export default async function SettingsPage() {
                   memberCount={members.length}
                   plan={plan}
                 />
+              </article>
+
+              <article className="rounded-lg border border-[#eadfd7] bg-white p-5 shadow-sm md:col-span-2">
+                <FamilyMemberBackupsPanel backups={memberBackups} />
               </article>
 
               <article className="rounded-lg border border-[#eadfd7] bg-white p-5 shadow-sm md:col-span-2">

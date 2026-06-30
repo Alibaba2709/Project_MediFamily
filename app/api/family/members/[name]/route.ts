@@ -2,8 +2,8 @@ import { NextResponse } from "next/server";
 import mongoose from "mongoose";
 import { getCurrentUser } from "@/app/lib/auth";
 import { connectMongo } from "@/app/lib/mongodb";
-import { getFamilyMembers } from "@/app/lib/family";
 import { canManageFamily, forbidden } from "@/app/lib/permissions";
+import { createFamilyMemberBackup } from "@/app/lib/familyMemberBackups";
 
 const MAX_IMAGE_BYTES = 120 * 1024;
 const imageDataUrlPattern = /^data:image\/(jpeg|jpg|png|webp);base64,/;
@@ -12,6 +12,25 @@ type RouteContext = {
   params: Promise<{
     name: string;
   }>;
+};
+
+type SerializableMember = {
+  name: string;
+  role: string;
+  imageDataUrl?: string;
+  birthDate?: string;
+  fiscalCode?: string;
+  bloodType?: string;
+  primaryDoctor?: string;
+  emergencyContactName?: string;
+  emergencyContactPhone?: string;
+  allergies?: string;
+  conditions?: string;
+  healthNotes?: string;
+};
+
+type StoredFamily = {
+  members?: SerializableMember[];
 };
 
 function serializeMember(member: {
@@ -97,7 +116,23 @@ export async function PATCH(request: Request, context: RouteContext) {
     return NextResponse.json({ error: validation.error }, { status: 400 });
   }
 
-  const currentMembers = await getFamilyMembers(user);
+  const family = await mongoose.connection
+    .collection<StoredFamily>("families")
+    .findOne({ key: user.familyId });
+  const currentMembers = Array.isArray(family?.members)
+    ? family.members.map(serializeMember)
+    : [];
+
+  if (!family || currentMembers.length === 0) {
+    return NextResponse.json(
+      {
+        error:
+          "Il nucleo familiare non ha membri salvati correttamente. Per sicurezza non ho modificato nulla: ricarica la pagina e riprova.",
+      },
+      { status: 409 }
+    );
+  }
+
   const memberExists = currentMembers.some(
     (member) => member.name.toLowerCase() === decodedName.toLowerCase()
   );
@@ -153,20 +188,23 @@ export async function PATCH(request: Request, context: RouteContext) {
     });
   });
 
+  await createFamilyMemberBackup({
+    familyId: user.familyId,
+    members: currentMembers,
+    reason: "update",
+    targetMemberName: decodedName,
+    userId: user.id,
+    userName: user.name,
+  });
+
   await mongoose.connection.collection("families").updateOne(
     { key: user.familyId },
     {
-      $setOnInsert: {
-        key: user.familyId,
-        name: "Nucleo familiare",
-        createdAt: new Date(),
-      },
       $set: {
         members: nextMembers,
         updatedAt: new Date(),
       },
-    },
-    { upsert: true }
+    }
   );
 
   return NextResponse.json({ members: nextMembers });
@@ -193,25 +231,44 @@ export async function DELETE(_request: Request, context: RouteContext) {
     );
   }
 
-  const currentMembers = await getFamilyMembers(user);
+  const family = await mongoose.connection
+    .collection<StoredFamily>("families")
+    .findOne({ key: user.familyId });
+  const currentMembers = Array.isArray(family?.members)
+    ? family.members.map(serializeMember)
+    : [];
+
+  if (!family || currentMembers.length === 0) {
+    return NextResponse.json(
+      {
+        error:
+          "Il nucleo familiare non ha membri salvati correttamente. Per sicurezza non ho modificato nulla: ricarica la pagina e riprova.",
+      },
+      { status: 409 }
+    );
+  }
+
   const nextMembers = currentMembers
     .filter((member) => member.name !== decodedName)
     .map(serializeMember);
 
+  await createFamilyMemberBackup({
+    familyId: user.familyId,
+    members: currentMembers,
+    reason: "delete",
+    targetMemberName: decodedName,
+    userId: user.id,
+    userName: user.name,
+  });
+
   await mongoose.connection.collection("families").updateOne(
     { key: user.familyId },
     {
-      $setOnInsert: {
-        key: user.familyId,
-        name: "Nucleo familiare",
-        createdAt: new Date(),
-      },
       $set: {
         members: nextMembers,
         updatedAt: new Date(),
       },
-    },
-    { upsert: true }
+    }
   );
 
   return NextResponse.json({ members: nextMembers });
