@@ -20,7 +20,12 @@ Medifamily is a full-stack web application designed to help families manage heal
 
 ## Screenshots
 
-(Add screenshots here)
+<img width="1470" height="835" alt="Screenshot 2026-06-30 at 12 37 26" src="https://github.com/user-attachments/assets/f0544ba9-7618-44f2-bd09-71728ad7145d" />
+
+<img width="1469" height="832" alt="Screenshot 2026-06-30 at 12 37 55" src="https://github.com/user-attachments/assets/cb2b7918-8e72-4b89-82fd-371329288b97" />
+
+<img width="1469" height="832" alt="Screenshot 2026-06-30 at 12 37 55" src="https://github.com/user-attachments/assets/fc2ee077-41b1-4d6b-b12f-f2c3cb4f2153" />
+
 
 ## Live Demo
 
