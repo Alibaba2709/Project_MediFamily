@@ -1,6 +1,10 @@
 import mongoose from "mongoose";
 import { connectMongo } from "@/app/lib/mongodb";
 import { CurrentUser } from "@/app/lib/auth";
+import {
+  buildFamilyPlanSummary,
+  type FamilyPlanSummary,
+} from "@/app/lib/plans";
 
 export type FamilyMember = {
   name: string;
@@ -67,6 +71,8 @@ type StoredFamily = {
   bookingPortalName?: string;
   bookingPortalUrl?: string;
   notificationSettings?: Partial<FamilyNotificationSettings>;
+  plan?: string;
+  subscriptionStatus?: string;
 };
 
 function mapFamilyMembers(
@@ -152,7 +158,16 @@ export async function getFamilyProfile(user: CurrentUser) {
   return {
     members: mapFamilyMembers(family, user),
     bookingSettings: mapFamilyBookingSettings(family, user),
+    plan: buildFamilyPlanSummary(family?.plan, family?.subscriptionStatus),
   };
+}
+
+export async function getFamilyPlan(
+  user: CurrentUser
+): Promise<FamilyPlanSummary> {
+  const family = await getStoredFamily(user);
+
+  return buildFamilyPlanSummary(family?.plan, family?.subscriptionStatus);
 }
 
 export function memberSlug(name: string) {

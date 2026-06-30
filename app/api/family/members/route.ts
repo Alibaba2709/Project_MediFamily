@@ -2,10 +2,9 @@ import { NextResponse } from "next/server";
 import mongoose from "mongoose";
 import { getCurrentUser } from "@/app/lib/auth";
 import { connectMongo } from "@/app/lib/mongodb";
-import { addanteMembers, getFamilyMembers } from "@/app/lib/family";
+import { addanteMembers, getFamilyMembers, getFamilyPlan } from "@/app/lib/family";
 import { canManageFamily, forbidden } from "@/app/lib/permissions";
-
-const FREE_MEMBER_LIMIT = 6;
+import { PREMIUM_MEMBER_LIMIT } from "@/app/lib/plans";
 
 function serializeMember(member: {
   name: string;
@@ -55,7 +54,10 @@ export async function POST(request: Request) {
   const body = await request.json();
   const name = String(body.name ?? "").trim();
   const role = String(body.role ?? "Familiare").trim();
-  const currentMembers = await getFamilyMembers(user);
+  const [currentMembers, plan] = await Promise.all([
+    getFamilyMembers(user),
+    getFamilyPlan(user),
+  ]);
 
   if (!name) {
     return NextResponse.json(
@@ -64,11 +66,12 @@ export async function POST(request: Request) {
     );
   }
 
-  if (currentMembers.length >= FREE_MEMBER_LIMIT) {
+  if (currentMembers.length >= plan.memberLimit) {
     return NextResponse.json(
       {
-        error:
-          "Il piano gratuito supporta fino a 6 membri. Per aggiungerne altri servira un abbonamento.",
+        error: plan.isPremiumActive
+          ? `Il piano Premium supporta fino a ${PREMIUM_MEMBER_LIMIT} membri.`
+          : `Il piano gratuito supporta fino a ${plan.memberLimit} membri. Il Premium arriva a ${PREMIUM_MEMBER_LIMIT}.`,
         upgradeRequired: true,
       },
       { status: 402 }

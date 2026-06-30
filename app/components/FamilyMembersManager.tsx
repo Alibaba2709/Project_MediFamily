@@ -7,22 +7,24 @@ import { FamilyMember } from "@/app/lib/family";
 import { AddFamilyMemberForm } from "@/app/components/AddFamilyMemberForm";
 import { ProfileImageControl } from "@/app/components/ProfileImageControl";
 import { MemberHealthInfoForm } from "@/app/components/MemberHealthInfoForm";
-
-const FREE_MEMBER_LIMIT = 6;
+import type { FamilyPlanSummary } from "@/app/lib/plans";
+import { PREMIUM_MEMBER_LIMIT } from "@/app/lib/plans";
 
 type FamilyMembersManagerProps = {
   currentUserName: string;
   members: FamilyMember[];
+  plan: FamilyPlanSummary;
 };
 
 export function FamilyMembersManager({
   currentUserName,
   members,
+  plan,
 }: FamilyMembersManagerProps) {
   const router = useRouter();
   const [error, setError] = useState("");
   const memberCount = members.length;
-  const isAtLimit = memberCount >= FREE_MEMBER_LIMIT;
+  const isAtLimit = memberCount >= plan.memberLimit;
 
   async function removeMember(name: string) {
     setError("");
@@ -48,12 +50,12 @@ export function FamilyMembersManager({
             Membri famiglia
           </h2>
           <p className="mt-1 text-sm text-[#6c5f57]">
-            {memberCount}/{FREE_MEMBER_LIMIT} inclusi nel piano gratuito
+            {memberCount}/{plan.memberLimit} membri inclusi nel piano {plan.name}
           </p>
         </div>
         {isAtLimit ? (
           <span className="rounded-md bg-[#fff7f5] px-2 py-1 text-xs font-semibold text-[#9f4d46]">
-            Upgrade
+            {plan.isPremiumActive ? "Limite" : "Upgrade"}
           </span>
         ) : null}
       </div>
@@ -118,14 +120,17 @@ export function FamilyMembersManager({
 
         {isAtLimit ? (
           <p className="rounded-md border border-[#f1d8cf] bg-[#fff7f5] px-3 py-2 text-sm text-[#7f5146]">
-            Hai raggiunto il limite gratuito. Per aggiungere altri membri sara
-            disponibile un piano famiglia premium.
+            {plan.isPremiumActive
+              ? `Hai raggiunto il limite Premium di ${plan.memberLimit} membri.`
+              : `Hai raggiunto il limite gratuito. Il Premium porta il nucleo a ${PREMIUM_MEMBER_LIMIT} membri.`}
           </p>
         ) : null}
         {!isAtLimit ? (
           <AddFamilyMemberForm
             currentCount={memberCount}
-            limit={FREE_MEMBER_LIMIT}
+            limit={plan.memberLimit}
+            planName={plan.name}
+            premiumLimit={PREMIUM_MEMBER_LIMIT}
           />
         ) : null}
       </div>

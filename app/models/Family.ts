@@ -26,6 +26,16 @@ const FamilySchema = new Schema(
     bookingRegion: { type: String },
     bookingPortalName: { type: String },
     bookingPortalUrl: { type: String },
+    plan: { type: String, enum: ["free", "premium"], default: "free" },
+    subscriptionStatus: {
+      type: String,
+      enum: ["active", "trialing", "past_due", "canceled", "incomplete", "none"],
+      default: "none",
+    },
+    stripeCustomerId: { type: String },
+    stripeSubscriptionId: { type: String },
+    premiumActivatedAt: { type: Date },
+    premiumCurrentPeriodEnd: { type: Date },
     notificationSettings: {
       emailEnabled: { type: Boolean, default: true },
       visitDaysBefore: { type: Number, default: 1 },

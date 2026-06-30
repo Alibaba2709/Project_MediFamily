@@ -7,12 +7,16 @@ import { Loader2, Plus } from "lucide-react";
 type AddFamilyMemberFormProps = {
   currentCount: number;
   limit?: number;
+  planName?: string;
+  premiumLimit?: number;
   compact?: boolean;
 };
 
 export function AddFamilyMemberForm({
   currentCount,
   limit = 6,
+  planName = "Free",
+  premiumLimit = 12,
   compact = false,
 }: AddFamilyMemberFormProps) {
   const router = useRouter();
@@ -50,8 +54,9 @@ export function AddFamilyMemberForm({
   if (isAtLimit) {
     return (
       <p className="rounded-md border border-[#f1d8cf] bg-[#fff7f5] px-3 py-2 text-sm text-[#7f5146]">
-        Limite gratuito raggiunto. Per aggiungere altri membri sara disponibile
-        un piano famiglia premium.
+        {planName === "Premium"
+          ? `Limite Premium raggiunto: massimo ${limit} membri.`
+          : `Limite gratuito raggiunto. Il Premium porta il nucleo a ${premiumLimit} membri.`}
       </p>
     );
   }

@@ -3,8 +3,7 @@ import { ArrowLeft, Settings } from "lucide-react";
 import { connectMongo } from "@/app/lib/mongodb";
 import { requireVerifiedUser } from "@/app/lib/auth";
 import {
-  getFamilyBookingSettings,
-  getFamilyMembers,
+  getFamilyProfile,
   getFamilyNotificationSettings,
 } from "@/app/lib/family";
 import { FamilyMembersManager } from "@/app/components/FamilyMembersManager";
@@ -13,6 +12,7 @@ import { NotificationSettingsForm } from "@/app/components/NotificationSettingsF
 import { FamilyAccessManager } from "@/app/components/FamilyAccessManager";
 import { ProfileImageControl } from "@/app/components/ProfileImageControl";
 import { AccountSecurityForms } from "@/app/components/AccountSecurityForms";
+import { SubscriptionPlanCard } from "@/app/components/SubscriptionPlanCard";
 import { User } from "@/app/models/User";
 import { FamilyInvite } from "@/app/models/FamilyInvite";
 
@@ -64,12 +64,14 @@ async function getFamilyAccessData(familyId: string) {
 
 export default async function SettingsPage() {
   const user = await requireVerifiedUser();
-  const members = await getFamilyMembers(user);
+  const familyProfile = await getFamilyProfile(user);
+  const members = familyProfile.members;
+  const bookingSettings = familyProfile.bookingSettings;
+  const plan = familyProfile.plan;
   const currentMember =
     members.find(
       (member) => member.name.toLowerCase() === user.name.toLowerCase()
     ) ?? members[0];
-  const bookingSettings = await getFamilyBookingSettings(user);
   const notificationSettings = await getFamilyNotificationSettings(user);
   const accessData =
     user.role === "owner"
@@ -161,6 +163,7 @@ export default async function SettingsPage() {
               <FamilyMembersManager
                 currentUserName={user.name}
                 members={members}
+                plan={plan}
               />
             ) : (
               <div>
@@ -176,6 +179,13 @@ export default async function SettingsPage() {
 
           {user.role === "owner" ? (
             <>
+              <article className="rounded-lg border border-[#eadfd7] bg-white p-5 shadow-sm md:col-span-2">
+                <SubscriptionPlanCard
+                  memberCount={members.length}
+                  plan={plan}
+                />
+              </article>
+
               <article className="rounded-lg border border-[#eadfd7] bg-white p-5 shadow-sm md:col-span-2">
                 <BookingSettingsForm settings={bookingSettings} />
               </article>

@@ -934,7 +934,7 @@ export default async function Home() {
       getMedications(user.familyId),
       getDocuments(user.familyId),
     ]);
-  const { members, bookingSettings } = familyProfile;
+  const { members, bookingSettings, plan } = familyProfile;
   const visibleVisits = visits.map((visit) => ({
     ...visit,
     memberName: displayFamilyMemberName(visit.memberName, members),
@@ -1155,7 +1155,8 @@ export default async function Home() {
                 <AddFamilyMemberForm
                   compact
                   currentCount={members.length}
-                  limit={6}
+                  limit={plan.memberLimit}
+                  planName={plan.name}
                 />
               </div>
 
