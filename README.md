@@ -1,8 +1,5 @@
 <div align="center">
 
-<img width="1254" height="1254" alt="medifamily-logo" src="https://github.com/user-attachments/assets/b3f1b4dd-c813-419c-ab6b-4bd6c6924bc5" />
-
-
 # 🩺 MediFamily
 
 ### *La salute di chi ami, organizzata.*
